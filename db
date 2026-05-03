@@ -1,0 +1,78 @@
+“””
+db.py — Database setup
+━━━━━━━━━━━━━━━━━━━━━━
+Single SQLite file. No server. Works on any machine, git-friendly.
+Creates data/jobs.db automatically on first run.
+
+Two tables:
+jobs        — every job posting scraped, deduplicated by ATS ID
+scrape_runs — log of every scrape run (for history/debugging)
+“””
+
+import sqlite3
+from pathlib import Path
+
+DB_PATH = Path(**file**).parent / “data” / “jobs.db”
+
+def get_conn():
+“”“Return a database connection. Creates the file + folder if needed.”””
+DB_PATH.parent.mkdir(exist_ok=True)
+conn = sqlite3.connect(DB_PATH)
+conn.row_factory = sqlite3.Row   # lets you access columns by name: row[“title”]
+return conn
+
+def init_db():
+“”“Create tables if they don’t exist. Safe to call multiple times.”””
+conn = get_conn()
+
+```
+conn.execute("""
+    CREATE TABLE IF NOT EXISTS jobs (
+        id           TEXT PRIMARY KEY,   -- e.g. "gh_7654321" (ATS-native ID)
+        source       TEXT NOT NULL,      -- "greenhouse" | "lever" | "ashby"
+        company      TEXT NOT NULL,
+        tier         INTEGER NOT NULL,   -- 0 | 1 | 2
+        work_pref    TEXT NOT NULL,      -- "remote" | "hybrid" | "ok"
+        title        TEXT NOT NULL,
+        department   TEXT,
+        location     TEXT,
+        remote_ok    INTEGER DEFAULT 0, -- 1 = tagged remote in listing
+        url          TEXT NOT NULL,
+        posted_at    TEXT,              -- "YYYY-MM-DD" string from ATS
+        days_old     INTEGER,           -- integer days since posted_at
+        hours_old    INTEGER,           -- integer hours since posted_at (for fresh filtering)
+        description  TEXT,
+        ghost_risk   TEXT DEFAULT 'low',   -- "low" | "medium" | "high"
+        ghost_reason TEXT,
+        first_seen   TEXT DEFAULT (datetime('now')),
+        last_seen    TEXT DEFAULT (datetime('now')),
+        status       TEXT DEFAULT 'new',   -- "new"|"reviewing"|"applied"|"rejected"|"offer"
+        match_score  INTEGER,              -- 0–100, written by match_resume.py
+        notes        TEXT
+    )
+""")
+
+conn.execute("""
+    CREATE TABLE IF NOT EXISTS scrape_runs (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        run_at     TEXT DEFAULT (datetime('now')),
+        companies  INTEGER,
+        jobs_found INTEGER,
+        jobs_new   INTEGER,
+        errors     TEXT
+    )
+""")
+
+# Migration: add hours_old if upgrading from an older version of the DB
+try:
+    conn.execute("ALTER TABLE jobs ADD COLUMN hours_old INTEGER")
+except sqlite3.OperationalError:
+    pass  # column already exists, fine
+
+conn.commit()
+conn.close()
+print(f"✅ Database ready → {DB_PATH}")
+```
+
+if **name** == “**main**”:
+init_db()
