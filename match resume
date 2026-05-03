@@ -1,0 +1,325 @@
+#!/usr/bin/env python3
+“””
+match_resume.py — LLM Resume Matcher
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+WHAT THIS FILE DOES:
+
+1. Loads your resume(s) from the resumes/ folder
+1. Fetches a job description from your DB (by job ID) or from a URL/file
+1. Sends both to Claude API and gets back:
+- Match score (0-100)
+- Verdict (Strong Apply / Apply / Apply with Caution / Skip)
+- 3 strengths specific to this JD
+- Gaps with severity + how to address each
+- 2 tailored resume bullets rewritten for this role
+- Cover letter angle
+1. Saves the score back to the DB for that job
+
+EXECUTION ORDER:
+match_resume.py
+→ loads resumes/*.txt
+→ imports db.py → queries jobs.db for the JD
+→ calls Anthropic API (api.anthropic.com)
+→ prints results + saves score to DB
+
+PREREQUISITES:
+
+- Run run_scraper.py first so jobs are in the DB
+- Add resume(s) as plain .txt files inside a resumes/ folder
+- Set ANTHROPIC_API_KEY environment variable
+  export ANTHROPIC_API_KEY=sk-ant-…
+  or pass it with –api-key
+
+USAGE:
+
+# Match against a specific job (use the # from view_jobs.py output)
+
+python match_resume.py –job-id gh_7654321
+
+# Compare ALL your resumes and pick the best one
+
+python match_resume.py –job-id gh_7654321 –all-resumes
+
+# Use a specific resume file
+
+python match_resume.py –job-id gh_7654321 –resume fintech_pm
+
+# Paste the job description from any source (not in your DB)
+
+python match_resume.py –jd-file stripe_pm_jd.txt
+
+# Directly from a Greenhouse job URL
+
+python match_resume.py –job-url https://boards.greenhouse.io/stripe/jobs/7654321
+“””
+
+import argparse
+import json
+import os
+import re
+import sys
+from pathlib import Path
+
+import requests
+
+sys.path.insert(0, str(Path(**file**).parent))
+from db import get_conn
+
+RESUMES_DIR = Path(**file**).parent / “resumes”
+API_URL     = “https://api.anthropic.com/v1/messages”
+MODEL       = “claude-sonnet-4-20250514”
+
+MATCH_PROMPT = “””  
+You are a senior technical recruiter and PM hiring expert.   
+Evaluate whether this candidate is a strong fit for this role.
+
+## Job Description:
+
+{jd}
+
+## Resume ({name}):
+
+{resume}
+
+Respond ONLY with a single JSON object. No markdown fences, no explanation outside the JSON.
+
+{{
+“score”: <integer 0-100>,
+“verdict”: “<Strong Apply | Apply | Apply with Caution | Skip>”,
+“summary”: “<2-3 sentence overall fit assessment>”,
+“strengths”: [
+“<specific resume evidence that matches a JD requirement>”,
+“<another strength>”,
+“<another strength>”
+],
+“gaps”: [
+{{
+“gap”: “<specific requirement from the JD that is missing or weak>”,
+“severity”: “<critical | moderate | minor>”,
+“suggestion”: “<concrete action: what to add to resume or how to address in cover letter>”
+}}
+],
+“tailored_bullets”: [
+“<existing resume bullet rewritten to use the JD’s exact language and metrics>”,
+“<another tailored bullet>”
+],
+“cover_letter_angle”: “<1-2 sentences: the strongest opening hook for a cover letter for this specific role>”
+}}”””
+
+# ─────────────────────────────────────────────────────────────────
+
+# LOADERS
+
+# ─────────────────────────────────────────────────────────────────
+
+def load_resumes() -> dict[str, str]:
+“”“Load all .txt files from resumes/ folder. Key = filename without extension.”””
+RESUMES_DIR.mkdir(exist_ok=True)
+resumes = {f.stem: f.read_text(encoding=“utf-8”) for f in RESUMES_DIR.glob(”*.txt”)}
+return resumes
+
+def fetch_jd_from_db(job_id: str) -> tuple[str, str, str]:
+“”“Returns (label, description, url) for a job ID in your database.”””
+conn = get_conn()
+row  = conn.execute(
+“SELECT company, title, description, url FROM jobs WHERE id = ?”, (job_id,)
+).fetchone()
+conn.close()
+if not row:
+print(f”❌ Job ID ‘{job_id}’ not found. Run the scraper first, then check view_jobs.py.”)
+sys.exit(1)
+label = f”{row[‘company’]} — {row[‘title’]}”
+return label, (row[“description”] or “”), row[“url”]
+
+def fetch_jd_from_greenhouse_url(url: str) -> tuple[str, str, str]:
+“”“Pull full JD from Greenhouse API using the job URL.”””
+m_id   = re.search(r”/jobs/(\d+)”, url)
+m_slug = re.search(r”greenhouse.io/([^/]+)/jobs”, url)
+if m_id and m_slug:
+slug   = m_slug.group(1)
+job_id = m_id.group(1)
+api    = f”https://boards-api.greenhouse.io/v1/boards/{slug}/jobs/{job_id}”
+r      = requests.get(api, timeout=10)
+if r.status_code == 200:
+d = r.json()
+return f”{slug} — {d.get(‘title’,’’)}”, d.get(“content”,””), url
+return url, “”, url
+
+# ─────────────────────────────────────────────────────────────────
+
+# API CALL
+
+# ─────────────────────────────────────────────────────────────────
+
+def call_claude(prompt: str, api_key: str) -> dict:
+r = requests.post(
+API_URL,
+headers={
+“x-api-key”:         api_key,
+“anthropic-version”: “2023-06-01”,
+“content-type”:      “application/json”,
+},
+json={
+“model”:      MODEL,
+“max_tokens”: 1500,
+“messages”:   [{“role”: “user”, “content”: prompt}],
+},
+timeout=30,
+)
+if r.status_code != 200:
+raise RuntimeError(f”API error {r.status_code}: {r.text[:300]}”)
+
+```
+text = r.json()["content"][0]["text"].strip()
+# Strip any accidental markdown fences
+text = re.sub(r"^```(?:json)?", "", text).rstrip("`").strip()
+return json.loads(text)
+```
+
+# ─────────────────────────────────────────────────────────────────
+
+# DISPLAY
+
+# ─────────────────────────────────────────────────────────────────
+
+def display_result(result: dict, job_label: str, resume_name: str, url: str):
+score   = result.get(“score”, 0)
+verdict = result.get(“verdict”, “”)
+
+```
+bar          = "█" * (score // 10) + "░" * (10 - score // 10)
+verdict_icon = {"Strong Apply":"🟢","Apply":"🟡","Apply with Caution":"🟠","Skip":"🔴"}.get(verdict, "⚪")
+
+print(f"\n{'═'*65}")
+print(f"  📋 {job_label}")
+print(f"  📄 Resume: {resume_name}")
+print(f"{'─'*65}")
+print(f"  Score  : [{bar}] {score}/100")
+print(f"  Verdict: {verdict_icon} {verdict}")
+print(f"\n  {result.get('summary','')}")
+
+print(f"\n  ✅ Strengths:")
+for s in result.get("strengths", []):
+    print(f"     • {s}")
+
+print(f"\n  ⚠️  Gaps:")
+for g in result.get("gaps", []):
+    sev_icon = {"critical":"🔴","moderate":"🟡","minor":"🟢"}.get(g.get("severity"),"⚪")
+    print(f"     {sev_icon} [{g.get('severity','?')}] {g.get('gap','')}")
+    print(f"        → {g.get('suggestion','')}")
+
+print(f"\n  ✏️  Tailored Resume Bullets:")
+for b in result.get("tailored_bullets", []):
+    print(f"     • {b}")
+
+print(f"\n  📬 Cover Letter Angle:")
+print(f"     {result.get('cover_letter_angle','')}")
+
+if url:
+    print(f"\n  🔗 Apply: {url}")
+print(f"{'═'*65}\n")
+```
+
+# ─────────────────────────────────────────────────────────────────
+
+# CLI
+
+# ─────────────────────────────────────────────────────────────────
+
+def main():
+parser = argparse.ArgumentParser(description=“JobRadar — Resume Matcher”)
+
+```
+source = parser.add_mutually_exclusive_group(required=True)
+source.add_argument("--job-id",  help="Job ID from your DB, e.g. gh_7654321")
+source.add_argument("--job-url", help="Direct Greenhouse job URL")
+source.add_argument("--jd-file", help="Path to a plain-text file with the job description")
+
+parser.add_argument("--resume",      help="Resume filename without .txt (default: all)")
+parser.add_argument("--all-resumes", action="store_true", help="Compare all resumes, rank by score")
+parser.add_argument("--api-key",     help="Anthropic API key (or set ANTHROPIC_API_KEY env var)")
+args = parser.parse_args()
+
+# API key
+api_key = args.api_key or os.environ.get("ANTHROPIC_API_KEY")
+if not api_key:
+    print("❌ Anthropic API key needed.")
+    print("   Set it: export ANTHROPIC_API_KEY=sk-ant-...")
+    print("   Or use: --api-key sk-ant-...")
+    print("   Get one: https://console.anthropic.com/")
+    sys.exit(1)
+
+# Resumes
+resumes = load_resumes()
+if not resumes:
+    print(f"❌ No resumes found in {RESUMES_DIR}")
+    print(f"   Create a plain text file: resumes/senior_pm.txt")
+    sys.exit(1)
+
+# Job description
+job_id = None
+if args.job_id:
+    job_id = args.job_id
+    job_label, jd_text, url = fetch_jd_from_db(args.job_id)
+elif args.job_url:
+    job_label, jd_text, url = fetch_jd_from_greenhouse_url(args.job_url)
+else:
+    path      = Path(args.jd_file)
+    jd_text   = path.read_text(encoding="utf-8")
+    job_label = path.stem
+    url       = ""
+
+if not jd_text.strip():
+    print("❌ Job description is empty. Check the source.")
+    sys.exit(1)
+
+# Which resumes to run
+if args.resume:
+    if args.resume not in resumes:
+        print(f"❌ Resume '{args.resume}' not found. Available: {list(resumes.keys())}")
+        sys.exit(1)
+    resumes_to_use = {args.resume: resumes[args.resume]}
+else:
+    resumes_to_use = resumes   # all of them (ranks at the end if >1)
+
+# Run the matcher
+results = []
+for name, text in resumes_to_use.items():
+    print(f"  🔍 Analyzing '{name}'...", flush=True)
+    prompt = MATCH_PROMPT.format(
+        jd=jd_text[:4000],
+        name=name,
+        resume=text[:4000],
+    )
+    try:
+        result = call_claude(prompt, api_key)
+        results.append((name, result))
+    except Exception as e:
+        print(f"  ❌ Error on '{name}': {e}")
+
+if not results:
+    print("❌ No results returned from API.")
+    sys.exit(1)
+
+# Sort by score, best first
+results.sort(key=lambda x: x[1].get("score", 0), reverse=True)
+
+for name, result in results:
+    display_result(result, job_label, name, url)
+
+# Save best score to DB
+if job_id and results:
+    best_score = results[0][1].get("score", 0)
+    conn = get_conn()
+    conn.execute("UPDATE jobs SET match_score = ? WHERE id = ?", (best_score, job_id))
+    conn.commit()
+    conn.close()
+    print(f"  💾 Score {best_score}/100 saved to DB for {job_id}")
+
+if len(results) > 1:
+    print(f"\n  🏆 Best resume: '{results[0][0]}' — score {results[0][1].get('score')}/100")
+```
+
+if **name** == “**main**”:
+main()
