@@ -1,4 +1,4 @@
-# # 🎯 JobRadar — Personal Job Search CRM
+# 🎯 JobRadar — Personal Job Search CRM
 
 > Automated job scraper + resume matcher for your curated company list.
 > Built with Python, SQLite, and the Anthropic API.
