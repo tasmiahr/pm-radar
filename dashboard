@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JobRadar — Pipeline Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #111418;
+    --surface2:  #181c22;
+    --border:    #232830;
+    --border2:   #2e3540;
+    --text:      #d4dae4;
+    --muted:     #5a6478;
+    --accent:    #3b82f6;
+    --accent-dim:#1d4ed8;
+    --green:     #22c55e;
+    --yellow:    #eab308;
+    --red:       #ef4444;
+    --orange:    #f97316;
+    --purple:    #a855f7;
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+- { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: var(–sans);
+font-size: 13px;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+header {
+display: flex;
+align-items: center;
+justify-content: space-between;
+padding: 14px 24px;
+background: var(–surface);
+border-bottom: 1px solid var(–border);
+position: sticky;
+top: 0;
+z-index: 100;
+}
+
+.logo {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.logo-icon {
+width: 28px; height: 28px;
+background: var(–accent);
+border-radius: 6px;
+display: flex; align-items: center; justify-content: center;
+font-size: 14px;
+}
+
+.logo-text {
+font-family: var(–mono);
+font-size: 14px;
+font-weight: 600;
+letter-spacing: 0.05em;
+color: #fff;
+}
+
+.logo-sub {
+font-size: 11px;
+color: var(–muted);
+font-family: var(–mono);
+margin-top: 1px;
+}
+
+.header-right {
+display: flex;
+align-items: center;
+gap: 16px;
+}
+
+.last-run {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+}
+
+.pulse {
+display: inline-block;
+width: 7px; height: 7px;
+background: var(–green);
+border-radius: 50%;
+margin-right: 6px;
+animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50%       { opacity: 0.3; }
+}
+
+.btn-load {
+background: var(–accent);
+color: #fff;
+border: none;
+padding: 6px 14px;
+border-radius: 5px;
+font-family: var(–mono);
+font-size: 11px;
+font-weight: 500;
+cursor: pointer;
+letter-spacing: 0.04em;
+transition: background 0.15s;
+}
+.btn-load:hover { background: var(–accent-dim); }
+
+/* ── STATS BAR ── */
+.stats-bar {
+display: flex;
+gap: 1px;
+background: var(–border);
+border-bottom: 1px solid var(–border);
+}
+
+.stat {
+flex: 1;
+padding: 12px 20px;
+background: var(–surface);
+display: flex;
+flex-direction: column;
+gap: 3px;
+}
+
+.stat-value {
+font-family: var(–mono);
+font-size: 22px;
+font-weight: 600;
+color: #fff;
+line-height: 1;
+}
+
+.stat-label {
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 0.05em;
+text-transform: uppercase;
+}
+
+.stat-value.green  { color: var(–green); }
+.stat-value.yellow { color: var(–yellow); }
+.stat-value.red    { color: var(–red); }
+.stat-value.blue   { color: var(–accent); }
+
+/* ── TOOLBAR ── */
+.toolbar {
+display: flex;
+align-items: center;
+gap: 10px;
+padding: 12px 24px;
+background: var(–surface2);
+border-bottom: 1px solid var(–border);
+flex-wrap: wrap;
+}
+
+.search-wrap {
+position: relative;
+flex: 1;
+min-width: 200px;
+max-width: 320px;
+}
+
+.search-wrap svg {
+position: absolute;
+left: 10px;
+top: 50%;
+transform: translateY(-50%);
+color: var(–muted);
+pointer-events: none;
+}
+
+input[type=text], select {
+background: var(–surface);
+border: 1px solid var(–border2);
+color: var(–text);
+font-family: var(–mono);
+font-size: 12px;
+border-radius: 5px;
+padding: 7px 10px;
+outline: none;
+transition: border-color 0.15s;
+}
+
+input[type=text] { padding-left: 32px; width: 100%; }
+
+input[type=text]:focus, select:focus { border-color: var(–accent); }
+
+select { cursor: pointer; min-width: 120px; }
+
+select option { background: var(–surface2); }
+
+.filter-group {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+
+.filter-label {
+font-size: 11px;
+color: var(–muted);
+font-family: var(–mono);
+white-space: nowrap;
+}
+
+.chip-group {
+display: flex;
+gap: 4px;
+}
+
+.chip {
+padding: 5px 10px;
+border-radius: 4px;
+border: 1px solid var(–border2);
+background: var(–surface);
+color: var(–muted);
+font-family: var(–mono);
+font-size: 11px;
+cursor: pointer;
+transition: all 0.12s;
+white-space: nowrap;
+}
+.chip:hover { border-color: var(–accent); color: var(–accent); }
+.chip.active { background: var(–accent); border-color: var(–accent); color: #fff; }
+
+.result-count {
+margin-left: auto;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+white-space: nowrap;
+}
+
+/* ── TABLE ── */
+.table-wrap {
+overflow-x: auto;
+padding: 0 24px 40px;
+}
+
+table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 16px;
+table-layout: fixed;
+}
+
+thead th {
+font-family: var(–mono);
+font-size: 10px;
+font-weight: 600;
+letter-spacing: 0.08em;
+text-transform: uppercase;
+color: var(–muted);
+padding: 8px 12px;
+text-align: left;
+border-bottom: 1px solid var(–border);
+white-space: nowrap;
+cursor: pointer;
+user-select: none;
+background: var(–surface2);
+position: sticky;
+top: 57px;
+}
+
+thead th:hover { color: var(–text); }
+thead th.sorted { color: var(–accent); }
+thead th.sorted::after { content: ’ ↓’; }
+thead th.sorted.asc::after { content: ’ ↑’; }
+
+/* Column widths */
+.col-posted   { width: 110px; }
+.col-company  { width: 130px; }
+.col-title    { width: auto;  }
+.col-location { width: 130px; }
+.col-legit    { width: 80px;  }
+.col-salary   { width: 120px; }
+.col-source   { width: 90px;  }
+.col-match    { width: 80px;  }
+.col-apply    { width: 60px;  }
+
+tbody tr {
+border-bottom: 1px solid var(–border);
+transition: background 0.1s;
+}
+
+tbody tr:hover { background: var(–surface2); }
+
+tbody td {
+padding: 10px 12px;
+vertical-align: middle;
+overflow: hidden;
+text-overflow: ellipsis;
+white-space: nowrap;
+max-width: 0;
+}
+
+.td-posted {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+}
+
+.td-posted .age-fresh  { color: var(–green); font-weight: 600; }
+.td-posted .age-recent { color: var(–yellow); }
+.td-posted .age-old    { color: var(–muted); }
+
+.td-company {
+font-weight: 500;
+color: #fff;
+font-size: 12px;
+}
+
+.td-title { color: var(–text); }
+
+.badge-remote {
+display: inline-flex;
+align-items: center;
+gap: 3px;
+background: rgba(59,130,246,0.12);
+color: var(–accent);
+border: 1px solid rgba(59,130,246,0.25);
+border-radius: 3px;
+padding: 1px 5px;
+font-size: 10px;
+font-family: var(–mono);
+font-weight: 500;
+margin-left: 6px;
+vertical-align: middle;
+}
+
+.badge-hybrid {
+background: rgba(168,85,247,0.12);
+color: var(–purple);
+border-color: rgba(168,85,247,0.25);
+}
+
+/* Legit badges */
+.legit-low {
+display: inline-flex; align-items: center; gap: 4px;
+color: var(–green);
+font-family: var(–mono); font-size: 11px; font-weight: 500;
+}
+.legit-medium {
+color: var(–yellow);
+font-family: var(–mono); font-size: 11px;
+display: inline-flex; align-items: center; gap: 4px;
+}
+.legit-high {
+color: var(–red);
+font-family: var(–mono); font-size: 11px;
+display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* Match score */
+.match-score {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.match-bar-wrap {
+width: 36px; height: 4px;
+background: var(–border2);
+border-radius: 2px;
+overflow: hidden;
+}
+.match-bar {
+height: 100%;
+border-radius: 2px;
+background: var(–green);
+transition: width 0.3s;
+}
+.match-bar.med { background: var(–yellow); }
+.match-bar.low { background: var(–red); }
+
+.match-num {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+}
+
+.match-na {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–border2);
+}
+
+/* Source badge */
+.source-badge {
+font-family: var(–mono);
+font-size: 10px;
+padding: 2px 6px;
+border-radius: 3px;
+font-weight: 500;
+letter-spacing: 0.04em;
+}
+.source-greenhouse { background: rgba(34,197,94,0.1);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2);  }
+.source-lever      { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
+.source-ashby      { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
+
+/* Salary */
+.salary-val {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–green);
+}
+.salary-na {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–border2);
+}
+
+/* Applicants */
+.applicants-val {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–yellow);
+}
+
+/* Apply link */
+.apply-btn {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 28px; height: 28px;
+background: var(–surface2);
+border: 1px solid var(–border2);
+border-radius: 4px;
+color: var(–muted);
+text-decoration: none;
+transition: all 0.12s;
+font-size: 13px;
+}
+.apply-btn:hover {
+background: var(–accent);
+border-color: var(–accent);
+color: #fff;
+}
+
+/* ── EMPTY STATE ── */
+.empty {
+text-align: center;
+padding: 80px 24px;
+color: var(–muted);
+}
+.empty-icon { font-size: 48px; margin-bottom: 16px; }
+.empty h3 { font-size: 16px; color: var(–text); margin-bottom: 8px; }
+.empty p  { font-size: 13px; line-height: 1.6; max-width: 480px; margin: 0 auto; }
+.empty code {
+background: var(–surface2);
+border: 1px solid var(–border2);
+padding: 2px 6px;
+border-radius: 3px;
+font-family: var(–mono);
+font-size: 12px;
+color: var(–accent);
+}
+
+/* ── LOAD DATA MODAL ── */
+.modal-backdrop {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.7);
+z-index: 200;
+align-items: center;
+justify-content: center;
+}
+.modal-backdrop.open { display: flex; }
+
+.modal {
+background: var(–surface);
+border: 1px solid var(–border2);
+border-radius: 10px;
+padding: 28px;
+width: 100%;
+max-width: 520px;
+margin: 24px;
+}
+
+.modal h2 {
+font-size: 16px;
+font-weight: 600;
+margin-bottom: 6px;
+color: #fff;
+}
+
+.modal p {
+color: var(–muted);
+font-size: 12px;
+line-height: 1.6;
+margin-bottom: 16px;
+}
+
+.modal pre {
+background: var(–bg);
+border: 1px solid var(–border2);
+border-radius: 6px;
+padding: 12px 14px;
+font-family: var(–mono);
+font-size: 12px;
+color: var(–accent);
+margin-bottom: 20px;
+overflow-x: auto;
+line-height: 1.6;
+}
+
+.modal-footer {
+display: flex;
+gap: 10px;
+justify-content: flex-end;
+}
+
+.btn-secondary {
+background: transparent;
+border: 1px solid var(–border2);
+color: var(–muted);
+padding: 7px 16px;
+border-radius: 5px;
+font-family: var(–mono);
+font-size: 11px;
+cursor: pointer;
+}
+.btn-secondary:hover { border-color: var(–text); color: var(–text); }
+
+textarea.json-paste {
+width: 100%;
+height: 120px;
+background: var(–bg);
+border: 1px solid var(–border2);
+border-radius: 6px;
+color: var(–text);
+font-family: var(–mono);
+font-size: 11px;
+padding: 10px;
+resize: vertical;
+outline: none;
+margin-bottom: 12px;
+}
+textarea.json-paste:focus { border-color: var(–accent); }
+
+.tab-group {
+display: flex;
+gap: 2px;
+margin-bottom: 16px;
+background: var(–bg);
+padding: 3px;
+border-radius: 6px;
+border: 1px solid var(–border);
+}
+.tab-btn {
+flex: 1;
+padding: 6px 10px;
+background: transparent;
+border: none;
+color: var(–muted);
+font-family: var(–mono);
+font-size: 11px;
+cursor: pointer;
+border-radius: 4px;
+transition: all 0.12s;
+}
+.tab-btn.active { background: var(–surface2); color: var(–text); }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.notice {
+background: rgba(59,130,246,0.08);
+border: 1px solid rgba(59,130,246,0.2);
+border-radius: 6px;
+padding: 10px 14px;
+font-size: 11px;
+color: var(–accent);
+margin-bottom: 16px;
+line-height: 1.6;
+}
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">📡</div>
+    <div>
+      <div class="logo-text">JOBRADAR</div>
+      <div class="logo-sub">Job Pipeline Dashboard</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="last-run" id="lastRun"><span class="pulse"></span>—</div>
+    <button class="btn-load" onclick="openModal()">⬆ Load Data</button>
+  </div>
+</header>
+
+<!-- STATS BAR -->
+
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-value blue" id="statTotal">—</div>
+    <div class="stat-label">Total Jobs</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value green" id="statFresh">—</div>
+    <div class="stat-label">Last 24 hrs</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statWeek">—</div>
+    <div class="stat-label">Last 7 days</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value green" id="statLegit">—</div>
+    <div class="stat-label">✅ Legit</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value yellow" id="statMaybe">—</div>
+    <div class="stat-label">⚠️ Suspect</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value red" id="statGhost">—</div>
+    <div class="stat-label">🚫 Ghost</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value blue" id="statRemote">—</div>
+    <div class="stat-label">🌐 Remote</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value" id="statApplied">—</div>
+    <div class="stat-label">Applied</div>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+
+<div class="toolbar">
+  <div class="search-wrap">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Search title, company..." oninput="applyFilters()">
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">TIER</span>
+    <div class="chip-group" id="tierChips">
+      <div class="chip active" data-val="all" onclick="setChip(this,'tier')">All</div>
+      <div class="chip" data-val="0" onclick="setChip(this,'tier')">T0 Hybrid</div>
+      <div class="chip" data-val="1" onclick="setChip(this,'tier')">T1 Remote</div>
+      <div class="chip" data-val="2" onclick="setChip(this,'tier')">T2 OK</div>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">LEGIT</span>
+    <div class="chip-group" id="legitChips">
+      <div class="chip active" data-val="all" onclick="setChip(this,'legit')">All</div>
+      <div class="chip" data-val="low" onclick="setChip(this,'legit')">✅ Legit</div>
+      <div class="chip" data-val="medium" onclick="setChip(this,'legit')">⚠️ Maybe</div>
+      <div class="chip" data-val="high" onclick="setChip(this,'legit')">🚫 Ghost</div>
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-label">POSTED</span>
+    <div class="chip-group" id="ageChips">
+      <div class="chip active" data-val="all"  onclick="setChip(this,'age')">All</div>
+      <div class="chip" data-val="6"   onclick="setChip(this,'age')">6h</div>
+      <div class="chip" data-val="12"  onclick="setChip(this,'age')">12h</div>
+      <div class="chip" data-val="24"  onclick="setChip(this,'age')">24h</div>
+      <div class="chip" data-val="72"  onclick="setChip(this,'age')">3d</div>
+      <div class="chip" data-val="168" onclick="setChip(this,'age')">7d</div>
+    </div>
+  </div>
+
+<span class="result-count" id="resultCount">— jobs</span>
+
+</div>
+
+<!-- TABLE -->
+
+<div class="table-wrap" id="tableWrap">
+  <div class="empty" id="emptyState">
+    <div class="empty-icon">📡</div>
+    <h3>No data loaded yet</h3>
+    <p>
+      If you opened this from GitHub Pages, data loads automatically once the
+      Actions workflow has run at least once.<br><br>
+      To load manually: run <code>python export_dashboard.py</code> then use
+      the <strong>Load Data</strong> button above.<br><br>
+      To trigger a scrape now: go to your repo → Actions → Daily Job Scrape → Run workflow.
+    </p>
+  </div>
+  <table id="jobTable" style="display:none">
+    <thead>
+      <tr>
+        <th class="col-posted  sorted" onclick="sortBy('hours_old')">POSTED</th>
+        <th class="col-company"        onclick="sortBy('company')">COMPANY</th>
+        <th class="col-title"          onclick="sortBy('title')">JOB TITLE</th>
+        <th class="col-location"       onclick="sortBy('location')">LOCATION</th>
+        <th class="col-legit"          onclick="sortBy('ghost_risk')">LEGIT?</th>
+        <th class="col-salary"         onclick="sortBy('salary')">SALARY</th>
+        <th                            onclick="sortBy('applicants')">APPLICANTS</th>
+        <th class="col-source"         onclick="sortBy('source')">SOURCE</th>
+        <th class="col-match"          onclick="sortBy('match_score')">MATCH</th>
+        <th class="col-apply">APPLY</th>
+      </tr>
+    </thead>
+    <tbody id="jobTbody"></tbody>
+  </table>
+</div>
+
+<!-- LOAD DATA MODAL -->
+
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <h2>Load Job Data</h2>
+    <p>Export from your database and paste the JSON here, or load the file directly.</p>
+
+```
+<div class="tab-group">
+  <button class="tab-btn active" onclick="switchTab('paste')">Paste JSON</button>
+  <button class="tab-btn" onclick="switchTab('file')">Load File</button>
+  <button class="tab-btn" onclick="switchTab('sample')">Sample Data</button>
+</div>
+
+<div class="tab-content active" id="tab-paste">
+  <div class="notice">
+    Run <strong>python export_dashboard.py</strong> in your jobradar folder,<br>
+    then copy the contents of <strong>dashboard_data.json</strong> and paste below.
+  </div>
+  <textarea class="json-paste" id="jsonPaste" placeholder='[{"company":"Stripe","title":"Senior PM",...}]'></textarea>
+</div>
+
+<div class="tab-content" id="tab-file">
+  <div class="notice">
+    Select the <strong>dashboard_data.json</strong> file generated by export_dashboard.py
+  </div>
+  <input type="file" id="fileInput" accept=".json" onchange="loadFile()" style="color:var(--text);margin-bottom:16px;">
+</div>
+
+<div class="tab-content" id="tab-sample">
+  <div class="notice">
+    Load 15 realistic sample jobs to preview the dashboard layout.<br>
+    Replace with your real data when ready.
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+  <button class="btn-load" onclick="loadData()">Load Jobs</button>
+</div>
+```
+
+  </div>
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────
+let ALL_JOBS = [];
+let sortCol  = 'hours_old';
+let sortAsc  = true;
+let filters  = { tier: 'all', legit: 'all', age: 'all' };
+
+// ────────────────────────────────────────────────
+// SAMPLE DATA (realistic, for demo)
+// ────────────────────────────────────────────────
+const SAMPLE_JOBS = [
+  { id:'gh_001', company:'Stripe',      title:'Senior Product Manager, Payments',         location:'Remote',            remote_ok:1, tier:0, hours_old:2,   days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://stripe.com/jobs', match_score:null, salary:'$175k–$215k', applicants:null },
+  { id:'gh_002', company:'Anthropic',   title:'Product Manager, Developer Experience',    location:'San Francisco, CA', remote_ok:0, tier:0, hours_old:5,   days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'lever',      url:'https://anthropic.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'gh_003', company:'Airbnb',      title:'Staff Product Manager, Hosting',           location:'Remote, USA',       remote_ok:1, tier:1, hours_old:11,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://airbnb.com/careers', match_score:null, salary:'$190k–$230k', applicants:null },
+  { id:'gh_004', company:'Coinbase',    title:'Senior PM, Consumer Products',             location:'Remote',            remote_ok:1, tier:1, hours_old:14,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://coinbase.com/careers', match_score:null, salary:'$185k–$220k', applicants:null },
+  { id:'lv_005', company:'Figma',       title:'Product Manager, Collaboration',           location:'Remote',            remote_ok:1, tier:1, hours_old:19,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'lever',      url:'https://figma.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'ab_006', company:'Notion',      title:'Senior PM, Core Editor',                  location:'New York, NY',      remote_ok:0, tier:1, hours_old:27,  days_old:1,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'ashby',      url:'https://notion.so/careers', match_score:null, salary:'$160k–$195k', applicants:null },
+  { id:'gh_007', company:'Reddit',      title:'Senior Product Manager, Ads',              location:'Remote',            remote_ok:1, tier:1, hours_old:31,  days_old:1,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://reddit.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'gh_008', company:'HubSpot',     title:'Group Product Manager, CRM',               location:'Remote, USA',       remote_ok:1, tier:1, hours_old:48,  days_old:2,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://hubspot.com/careers', match_score:null, salary:'$155k–$185k', applicants:null },
+  { id:'gh_009', company:'Cloudflare',  title:'PM, Zero Trust Products',                  location:'Austin, TX',        remote_ok:0, tier:0, hours_old:55,  days_old:2,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://cloudflare.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'ab_010', company:'Glean',       title:'Product Manager, Enterprise Search',       location:'Remote',            remote_ok:1, tier:1, hours_old:72,  days_old:3,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'ashby',      url:'https://glean.com/careers', match_score:null, salary:'$165k–$200k', applicants:null },
+  { id:'gh_011', company:'Zillow',      title:'Senior PM, Mortgage Experience',           location:'Remote',            remote_ok:1, tier:1, hours_old:98,  days_old:4,  ghost_risk:'medium', ghost_reason:'4d old, monitor', source:'greenhouse', url:'https://zillow.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'gh_012', company:'Pinterest',   title:'Staff Product Manager, Shopping',          location:'Remote',            remote_ok:1, tier:1, hours_old:120, days_old:5,  ghost_risk:'medium', ghost_reason:'5d old', source:'greenhouse', url:'https://pinterest.com/careers', match_score:null, salary:'$200k–$240k', applicants:null },
+  { id:'lv_013', company:'Spotify',     title:'Senior PM, Podcast Discovery',             location:'New York, NY',      remote_ok:0, tier:1, hours_old:145, days_old:6,  ghost_risk:'medium', ghost_reason:'6d old', source:'lever',      url:'https://spotify.com/careers', match_score:null, salary:null, applicants:null },
+  { id:'gh_014', company:'Affirm',      title:'Product Manager, Underwriting',            location:'Remote',            remote_ok:1, tier:1, hours_old:168, days_old:7,  ghost_risk:'medium', ghost_reason:'7d old', source:'greenhouse', url:'https://affirm.com/careers', match_score:null, salary:'$145k–$175k', applicants:null },
+  { id:'gh_015', company:'Toast',       title:'Senior PM, Payments & Commerce',           location:'Boston, MA',        remote_ok:0, tier:2, hours_old:480, days_old:20, ghost_risk:'high',   ghost_reason:'20d old — possible ghost', source:'greenhouse', url:'https://toasttab.com/careers', match_score:null, salary:null, applicants:null },
+];
+
+// ────────────────────────────────────────────────
+// MODAL
+// ────────────────────────────────────────────────
+function openModal()  { document.getElementById('modalBackdrop').classList.add('open'); }
+function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target.id === 'modalBackdrop') closeModal(); }
+
+let activeTab = 'paste';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabs = ['paste','file','sample'];
+    b.classList.toggle('active', tabs[i] === tab);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+function loadFile() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      ingestJobs(data);
+      closeModal();
+    } catch { alert('Invalid JSON file.'); }
+  };
+  reader.readAsText(file);
+}
+
+function loadData() {
+  if (activeTab === 'sample') {
+    ingestJobs(SAMPLE_JOBS);
+    closeModal();
+    return;
+  }
+  if (activeTab === 'file') { loadFile(); return; }
+  // paste tab
+  const raw = document.getElementById('jsonPaste').value.trim();
+  if (!raw) { alert('Paste your JSON first.'); return; }
+  try {
+    const data = JSON.parse(raw);
+    ingestJobs(Array.isArray(data) ? data : data.jobs || []);
+    closeModal();
+  } catch(e) { alert('Invalid JSON: ' + e.message); }
+}
+
+// ────────────────────────────────────────────────
+// INGEST
+// ────────────────────────────────────────────────
+function ingestJobs(jobs) {
+  ALL_JOBS = jobs;
+  updateStats();
+  applyFilters();
+
+  const now = new Date().toLocaleString('en-US', { hour:'numeric', minute:'2-digit', hour12:true, month:'short', day:'numeric' });
+  document.getElementById('lastRun').innerHTML = `<span class="pulse"></span>Updated ${now}`;
+}
+
+// ────────────────────────────────────────────────
+// STATS
+// ────────────────────────────────────────────────
+function updateStats() {
+  const jobs = ALL_JOBS;
+  document.getElementById('statTotal').textContent   = jobs.length;
+  document.getElementById('statFresh').textContent   = jobs.filter(j => (j.hours_old ?? 9999) <= 24).length;
+  document.getElementById('statWeek').textContent    = jobs.filter(j => (j.days_old  ?? 9999) <= 7).length;
+  document.getElementById('statLegit').textContent   = jobs.filter(j => j.ghost_risk === 'low').length;
+  document.getElementById('statMaybe').textContent   = jobs.filter(j => j.ghost_risk === 'medium').length;
+  document.getElementById('statGhost').textContent   = jobs.filter(j => j.ghost_risk === 'high').length;
+  document.getElementById('statRemote').textContent  = jobs.filter(j => j.remote_ok  == 1).length;
+  document.getElementById('statApplied').textContent = jobs.filter(j => j.status === 'applied').length;
+}
+
+// ────────────────────────────────────────────────
+// FILTERS & SORT
+// ────────────────────────────────────────────────
+function setChip(el, group) {
+  document.getElementById(group + 'Chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  filters[group] = el.dataset.val;
+  applyFilters();
+}
+
+function applyFilters() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  let rows = ALL_JOBS.filter(j => {
+    if (search && !(
+      (j.company || '').toLowerCase().includes(search) ||
+      (j.title   || '').toLowerCase().includes(search) ||
+      (j.location|| '').toLowerCase().includes(search)
+    )) return false;
+
+    if (filters.tier  !== 'all' && String(j.tier)       !== filters.tier)  return false;
+    if (filters.legit !== 'all' && j.ghost_risk          !== filters.legit) return false;
+    if (filters.age   !== 'all' && (j.hours_old ?? 99999) > parseInt(filters.age)) return false;
+    return true;
+  });
+
+  // sort
+  rows = sortRows(rows);
+
+  document.getElementById('resultCount').textContent = rows.length + ' jobs';
+  renderTable(rows);
+}
+
+function sortBy(col) {
+  const ths = document.querySelectorAll('thead th');
+  ths.forEach(th => { th.classList.remove('sorted','asc'); });
+
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = col === 'hours_old'; }
+
+  const idx = ['hours_old','company','title','location','ghost_risk','salary','applicants','source','match_score'].indexOf(col);
+  if (idx >= 0) {
+    ths[idx].classList.add('sorted');
+    if (!sortAsc) ths[idx].classList.add('asc');
+  }
+  applyFilters();
+}
+
+function sortRows(rows) {
+  return [...rows].sort((a, b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    if (va < vb) return sortAsc ? -1 : 1;
+    if (va > vb) return sortAsc ?  1 : -1;
+    return 0;
+  });
+}
+
+// ────────────────────────────────────────────────
+// RENDER
+// ────────────────────────────────────────────────
+function ageStr(job) {
+  const h = job.hours_old, d = job.days_old;
+  if (h == null && d == null) return '<span class="age-old">unknown</span>';
+  if (h != null && h < 24)   return `<span class="age-fresh">${h}h ago</span>`;
+  if (h != null && h < 48)   return `<span class="age-recent">${h}h ago</span>`;
+  if (d != null && d <= 3)   return `<span class="age-recent">${d}d ago</span>`;
+  return `<span class="age-old">${d ?? Math.round(h/24)}d ago</span>`;
+}
+
+function legitBadge(risk, reason) {
+  const tip = reason ? ` title="${reason}"` : '';
+  if (risk === 'low')    return `<span class="legit-low"${tip}>✅ Legit</span>`;
+  if (risk === 'medium') return `<span class="legit-medium"${tip}>⚠️ Maybe</span>`;
+  return `<span class="legit-high"${tip}>🚫 Ghost</span>`;
+}
+
+function matchCell(score) {
+  if (score == null) return `<span class="match-na">— no API</span>`;
+  const cls = score >= 70 ? '' : score >= 50 ? 'med' : 'low';
+  return `<div class="match-score">
+    <div class="match-bar-wrap"><div class="match-bar ${cls}" style="width:${score}%"></div></div>
+    <span class="match-num">${score}</span>
+  </div>`;
+}
+
+function locationCell(job) {
+  const loc = job.location || '';
+  const badge = job.remote_ok == 1
+    ? '<span class="badge-remote">🌐 Remote</span>'
+    : job.work_pref === 'hybrid'
+      ? '<span class="badge-remote badge-hybrid">🏢 Hybrid</span>'
+      : '';
+  return `<span>${loc}</span>${badge}`;
+}
+
+function sourceBadge(src) {
+  return `<span class="source-badge source-${src}">${src}</span>`;
+}
+
+function salaryCell(salary) {
+  if (!salary) return `<span class="salary-na">—</span>`;
+  return `<span class="salary-val">${salary}</span>`;
+}
+
+function applicantsCell(n) {
+  if (n == null) return `<span class="salary-na">—</span>`;
+  return `<span class="applicants-val">${n.toLocaleString()}</span>`;
+}
+
+function renderTable(rows) {
+  const empty = document.getElementById('emptyState');
+  const table = document.getElementById('jobTable');
+  const tbody = document.getElementById('jobTbody');
+
+  if (ALL_JOBS.length === 0) {
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  tbody.innerHTML = rows.map(j => `
+    <tr>
+      <td class="td-posted col-posted">${ageStr(j)}<br><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">${j.posted_at || ''}</span></td>
+      <td class="td-company col-company">${j.company}</td>
+      <td class="td-title col-title" title="${j.title}">${j.title}</td>
+      <td class="col-location">${locationCell(j)}</td>
+      <td class="col-legit">${legitBadge(j.ghost_risk, j.ghost_reason)}</td>
+      <td class="col-salary">${salaryCell(j.salary)}</td>
+      <td>${applicantsCell(j.applicants)}</td>
+      <td class="col-source">${sourceBadge(j.source)}</td>
+      <td class="col-match">${matchCell(j.match_score)}</td>
+      <td class="col-apply"><a class="apply-btn" href="${j.url}" target="_blank" title="Open job posting">↗</a></td>
+    </tr>
+  `).join('');
+}
+
+// ────────────────────────────────────────────────
+// INIT — auto-fetch dashboard_data.json if served
+// ────────────────────────────────────────────────
+document.querySelectorAll('thead th')[0].classList.add('sorted');
+renderTable([]);
+
+async function autoLoad() {
+  // Only attempt fetch when served over http(s) — not file://
+  if (!location.protocol.startsWith('http')) return;
+
+  try {
+    // Cache-bust so GitHub Pages always serves the latest commit
+    const res = await fetch('dashboard_data.json?t=' + Date.now());
+    if (!res.ok) return;  // file doesn't exist yet, show empty state
+
+    const data = await res.json();
+    const jobs = Array.isArray(data) ? data : (data.jobs || []);
+    if (jobs.length === 0) return;
+
+    ingestJobs(jobs);
+
+    // Show last-updated from metadata if present
+    if (data.meta) {
+      const t = data.meta.exported_at || '';
+      const n = data.meta.new_this_run ?? null;
+      const badge = n !== null && n > 0
+        ? ` <span style="color:var(--green);font-family:var(--mono);font-size:11px">(+${n} new)</span>`
+        : '';
+      document.getElementById('lastRun').innerHTML =
+        `<span class="pulse"></span>Updated ${t}${badge}`;
+    }
+  } catch (e) {
+    // Silently fail — user can still use Load Data button
+  }
+}
+
+autoLoad();
+</script>
+
+</body>
+</html>
