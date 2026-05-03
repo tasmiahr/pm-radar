@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+“””
+notify.py — Send alerts when new jobs are found
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Called by GitHub Actions after each scrape run.
+Only sends a notification if new jobs were found.
+
+Supports three channels — enable whichever you want via GitHub Secrets:
+
+EMAIL (via Gmail SMTP)
+NOTIFY_EMAIL_TO      your@email.com
+NOTIFY_EMAIL_FROM    your-gmail@gmail.com
+NOTIFY_EMAIL_PASS    Gmail App Password (not your real password)
+→ gmail.com → Security → App Passwords
+
+DISCORD (via webhook)
+NOTIFY_DISCORD_WEBHOOK   https://discord.com/api/webhooks/…
+→ Discord server → Edit Channel → Integrations → Webhooks
+
+SLACK (via webhook)
+NOTIFY_SLACK_WEBHOOK     https://hooks.slack.com/services/…
+→ api.slack.com/apps → Create App → Incoming Webhooks
+
+Set these in: GitHub repo → Settings → Secrets → Actions → New repository secret
+
+USAGE (called by GitHub Actions, but also runnable locally):
+python notify.py –new 5 –total 142 –dashboard-url https://you.github.io/jobradar
+“””
+
+import argparse
+import json
+import os
+import smtplib
+import sqlite3
+import sys
+from datetime import datetime, timezone
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+
+import requests
+
+DB_PATH = Path(**file**).parent / “data” / “jobs.db”
+
+# ─────────────────────────────────────────────────────────────────
+
+# FETCH NEW JOBS DETAIL
+
+# ─────────────────────────────────────────────────────────────────
+
+def get_new_jobs(limit=10):
+“”“Pull the most recently added jobs from the DB for the notification body.”””
+if not DB_PATH.exists():
+return []
+conn = sqlite3.connect(DB_PATH)
+conn.row_factory = sqlite3.Row
+rows = conn.execute(”””
+SELECT company, title, location, remote_ok, ghost_risk, url, tier, hours_old, days_old
+FROM jobs
+ORDER BY first_seen DESC
+LIMIT ?
+“””, (limit,)).fetchall()
+conn.close()
+return [dict(r) for r in rows]
+
+# ─────────────────────────────────────────────────────────────────
+
+# MESSAGE BUILDERS
+
+# ─────────────────────────────────────────────────────────────────
+
+def build_job_lines(jobs):
+“”“Plain text lines for email / Slack.”””
+lines = []
+for j in jobs:
+risk  = {“low”: “✅”, “medium”: “⚠️”, “high”: “🚫”}.get(j.get(“ghost_risk”), “?”)
+loc   = j.get(“location”) or (“Remote” if j.get(“remote_ok”) else “—”)
+age   = f”{j[‘hours_old’]}h” if j.get(“hours_old”) and j[“hours_old”] < 48   
+else f”{j.get(‘days_old’, ‘?’)}d”
+lines.append(f”{risk} {j[‘company’]} — {j[‘title’]}  [{loc}]  ({age} ago)”)
+return lines
+
+def build_email_html(new_count, total, jobs, dashboard_url):
+rows_html = “”
+for j in jobs:
+risk_badge = {
+“low”:    ‘<span style="color:#22c55e">✅ Legit</span>’,
+“medium”: ‘<span style="color:#eab308">⚠️ Maybe</span>’,
+“high”:   ‘<span style="color:#ef4444">🚫 Ghost</span>’,
+}.get(j.get(“ghost_risk”), “?”)
+loc = j.get(“location”) or (“Remote” if j.get(“remote_ok”) else “—”)
+rows_html += f”””
+<tr>
+<td style="padding:8px 12px;border-bottom:1px solid #232830;color:#fff;font-weight:500">{j[‘company’]}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #232830;color:#d4dae4">{j[‘title’]}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #232830;color:#5a6478;font-size:12px">{loc}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #232830;font-size:12px">{risk_badge}</td>
+<td style="padding:8px 12px;border-bottom:1px solid #232830">
+<a href="{j['url']}" style="color:#3b82f6;font-size:12px;text-decoration:none">Apply ↗</a>
+</td>
+</tr>”””
+
+```
+now = datetime.now(timezone.utc).strftime("%b %d, %Y at %H:%M UTC")
+return f"""
+```
+
+<!DOCTYPE html>
+
+<html>
+<body style="margin:0;padding:0;background:#0a0c0f;font-family:'Helvetica Neue',Arial,sans-serif">
+  <div style="max-width:640px;margin:0 auto;padding:32px 16px">
+
+```
+<div style="margin-bottom:24px">
+  <span style="font-size:22px;font-weight:700;color:#fff">📡 JobRadar</span>
+  <span style="color:#5a6478;font-size:13px;margin-left:12px">{now}</span>
+</div>
+
+<div style="background:#111418;border:1px solid #232830;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+  <div style="font-size:32px;font-weight:700;color:#3b82f6;margin-bottom:4px">{new_count}</div>
+  <div style="color:#5a6478;font-size:13px;text-transform:uppercase;letter-spacing:0.05em">New jobs found · {total} total in pipeline</div>
+</div>
+
+<table style="width:100%;border-collapse:collapse;background:#111418;border:1px solid #232830;border-radius:10px;overflow:hidden;margin-bottom:20px">
+  <thead>
+    <tr style="background:#181c22">
+      <th style="padding:10px 12px;text-align:left;color:#5a6478;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Company</th>
+      <th style="padding:10px 12px;text-align:left;color:#5a6478;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Role</th>
+      <th style="padding:10px 12px;text-align:left;color:#5a6478;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Location</th>
+      <th style="padding:10px 12px;text-align:left;color:#5a6478;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Legit?</th>
+      <th style="padding:10px 12px;text-align:left;color:#5a6478;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Link</th>
+    </tr>
+  </thead>
+  <tbody>{rows_html}</tbody>
+</table>
+
+<div style="text-align:center;margin-top:28px">
+  <a href="{dashboard_url}"
+     style="display:inline-block;background:#3b82f6;color:#fff;padding:12px 28px;
+            border-radius:6px;text-decoration:none;font-weight:600;font-size:14px">
+    Open Full Dashboard →
+  </a>
+</div>
+
+<p style="color:#2e3540;font-size:11px;text-align:center;margin-top:24px">
+  JobRadar · Auto-generated · github.com/jobradar
+</p>
+```
+
+  </div>
+</body>
+</html>"""
+
+# ─────────────────────────────────────────────────────────────────
+
+# SEND FUNCTIONS
+
+# ─────────────────────────────────────────────────────────────────
+
+def send_email(new_count, total, jobs, dashboard_url):
+to_addr   = os.environ.get(“NOTIFY_EMAIL_TO”)
+from_addr = os.environ.get(“NOTIFY_EMAIL_FROM”)
+password  = os.environ.get(“NOTIFY_EMAIL_PASS”)
+
+```
+if not all([to_addr, from_addr, password]):
+    print("  ⏭️  Email: skipped (NOTIFY_EMAIL_* secrets not set)")
+    return False
+
+msg = MIMEMultipart("alternative")
+msg["Subject"] = f"📡 JobRadar — {new_count} new job{'s' if new_count != 1 else ''} found"
+msg["From"]    = f"JobRadar <{from_addr}>"
+msg["To"]      = to_addr
+
+# Plain text fallback
+lines = build_job_lines(jobs)
+plain = f"JobRadar — {new_count} new jobs\n\n" + "\n".join(lines) + f"\n\nDashboard: {dashboard_url}"
+msg.attach(MIMEText(plain, "plain"))
+msg.attach(MIMEText(build_email_html(new_count, total, jobs, dashboard_url), "html"))
+
+try:
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+        s.login(from_addr, password)
+        s.sendmail(from_addr, to_addr, msg.as_string())
+    print(f"  ✅ Email sent → {to_addr}")
+    return True
+except Exception as e:
+    print(f"  ❌ Email failed: {e}")
+    return False
+```
+
+def send_discord(new_count, total, jobs, dashboard_url):
+webhook = os.environ.get(“NOTIFY_DISCORD_WEBHOOK”)
+if not webhook:
+print(”  ⏭️  Discord: skipped (NOTIFY_DISCORD_WEBHOOK not set)”)
+return False
+
+```
+lines = build_job_lines(jobs[:8])  # Discord embeds cap at reasonable length
+body = "\n".join(f"`{l}`" for l in lines)
+
+payload = {
+    "username": "JobRadar",
+    "avatar_url": "https://raw.githubusercontent.com/github/explore/main/topics/python/python.png",
+    "embeds": [{
+        "title": f"📡 {new_count} new job{'s' if new_count != 1 else ''} found",
+        "description": body,
+        "color": 0x3b82f6,
+        "fields": [
+            {"name": "Total in pipeline", "value": str(total), "inline": True},
+            {"name": "Dashboard", "value": f"[Open →]({dashboard_url})", "inline": True},
+        ],
+        "footer": {"text": "JobRadar · auto-updated"},
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }]
+}
+
+try:
+    r = requests.post(webhook, json=payload, timeout=10)
+    if r.status_code in (200, 204):
+        print("  ✅ Discord notification sent")
+        return True
+    print(f"  ❌ Discord failed: {r.status_code} {r.text[:100]}")
+    return False
+except Exception as e:
+    print(f"  ❌ Discord error: {e}")
+    return False
+```
+
+def send_slack(new_count, total, jobs, dashboard_url):
+webhook = os.environ.get(“NOTIFY_SLACK_WEBHOOK”)
+if not webhook:
+print(”  ⏭️  Slack: skipped (NOTIFY_SLACK_WEBHOOK not set)”)
+return False
+
+```
+lines = build_job_lines(jobs[:8])
+body  = "\n".join(f"• {l}" for l in lines)
+
+payload = {
+    "blocks": [
+        {
+            "type": "header",
+            "text": {"type": "plain_text", "text": f"📡 JobRadar — {new_count} new job{'s' if new_count != 1 else ''} found"}
+        },
+        {
+            "type": "section",
+            "text": {"type": "mrkdwn", "text": body}
+        },
+        {
+            "type": "section",
+            "fields": [
+                {"type": "mrkdwn", "text": f"*Total in pipeline*\n{total}"},
+                {"type": "mrkdwn", "text": f"*Dashboard*\n<{dashboard_url}|Open →>"},
+            ]
+        },
+        {"type": "divider"}
+    ]
+}
+
+try:
+    r = requests.post(webhook, json=payload, timeout=10)
+    if r.status_code == 200:
+        print("  ✅ Slack notification sent")
+        return True
+    print(f"  ❌ Slack failed: {r.status_code} {r.text[:100]}")
+    return False
+except Exception as e:
+    print(f"  ❌ Slack error: {e}")
+    return False
+```
+
+# ─────────────────────────────────────────────────────────────────
+
+# MAIN
+
+# ─────────────────────────────────────────────────────────────────
+
+def notify(new_count, total, dashboard_url):
+if new_count == 0:
+print(”  ℹ️  No new jobs — skipping notifications”)
+return
+
+```
+print(f"\n🔔 Sending notifications ({new_count} new jobs)...")
+jobs = get_new_jobs(limit=10)
+
+sent = 0
+sent += send_email(new_count, total, jobs, dashboard_url)
+sent += send_discord(new_count, total, jobs, dashboard_url)
+sent += send_slack(new_count, total, jobs, dashboard_url)
+
+if sent == 0:
+    print("\n  ℹ️  No notification channels configured.")
+    print("  Add any of these to GitHub Secrets to enable alerts:")
+    print("    NOTIFY_EMAIL_TO + NOTIFY_EMAIL_FROM + NOTIFY_EMAIL_PASS")
+    print("    NOTIFY_DISCORD_WEBHOOK")
+    print("    NOTIFY_SLACK_WEBHOOK")
+```
+
+if **name** == “**main**”:
+parser = argparse.ArgumentParser(description=“JobRadar — send new-job notifications”)
+parser.add_argument(”–new”,           type=int, required=True,  help=“Number of new jobs this run”)
+parser.add_argument(”–total”,         type=int, default=0,      help=“Total jobs in pipeline”)
+parser.add_argument(”–dashboard-url”, default=“https://github.com”, help=“Dashboard URL”)
+args = parser.parse_args()
+
+```
+notify(args.new, args.total, args.dashboard_url)
+```
