@@ -1,92 +1,90 @@
-“””
-companies.py — Your target company list
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+companies.py -- Your target company list
+--------------------------------------
 
 HOW TO ADD A COMPANY:
+  1. Find their ATS by looking at any job URL on their careers page:
+       boards.greenhouse.io/SLUG   → ats="greenhouse", slug="SLUG"
+       jobs.lever.co/SLUG          → ats="lever",      slug="SLUG"
+       jobs.ashbyhq.com/SLUG       → ats="ashby",      slug="SLUG"
+       (Workday URL)               → ats="workday",    slug=None
 
-1. Find their ATS by looking at any job URL on their careers page:
-   boards.greenhouse.io/SLUG   → ats=“greenhouse”, slug=“SLUG”
-   jobs.lever.co/SLUG          → ats=“lever”,      slug=“SLUG”
-   jobs.ashbyhq.com/SLUG       → ats=“ashby”,      slug=“SLUG”
-   (Workday URL)               → ats=“workday”,    slug=None
-1. Pick a tier:
-   0 = hybrid ok (you’d go onsite)
-   1 = remote strongly preferred
-   2 = open to it
-1. Add a line like this:
-   (“Ramp”, “ashby”, “ramp”, 1, “remote”),
+  2. Pick a tier:
+       0 = hybrid ok (you'd go onsite)
+       1 = remote strongly preferred
+       2 = open to it
 
-EXAMPLE — Ramp’s careers are at jobs.ashbyhq.com/ramp
-so: ats=“ashby”, slug=“ramp”
-“””
+  3. Add a line like this:
+       ("Ramp", "ashby", "ramp", 1, "remote"),
+
+  EXAMPLE -- Ramp's careers are at jobs.ashbyhq.com/ramp
+  so: ats="ashby", slug="ramp"
+"""
 
 COMPANIES = [
 
-```
-# ══════════════════════════════════════════════════════
-# TIER 0 — Hybrid OK
-# ══════════════════════════════════════════════════════
-("OpenAI",      "greenhouse", "openai",        0, "hybrid"),
-("Meta",        "greenhouse", "meta",          0, "hybrid"),
-("Anthropic",   "lever",      "anthropic",     0, "hybrid"),
-("Stripe",      "greenhouse", "stripe",        0, "hybrid"),
-("Expedia",     "greenhouse", "expediagroup",  0, "hybrid"),
-("Cloudflare",  "greenhouse", "cloudflare",    0, "hybrid"),
-("Capital One", "workday",    None,            0, "hybrid"),   # Phase 2
-("Visa",        "workday",    None,            0, "hybrid"),   # Phase 2
+    # ======================================================
+    # TIER 0 -- Hybrid OK
+    # ======================================================
+    ("OpenAI",      "greenhouse", "openai",        0, "hybrid"),
+    ("Meta",        "greenhouse", "meta",          0, "hybrid"),
+    ("Anthropic",   "lever",      "anthropic",     0, "hybrid"),
+    ("Stripe",      "greenhouse", "stripe",        0, "hybrid"),
+    ("Expedia",     "greenhouse", "expediagroup",  0, "hybrid"),
+    ("Cloudflare",  "greenhouse", "cloudflare",    0, "hybrid"),
+    ("Capital One", "workday",    None,            0, "hybrid"),   # Phase 2
+    ("Visa",        "workday",    None,            0, "hybrid"),   # Phase 2
 
-# ══════════════════════════════════════════════════════
-# TIER 1 — Remote Preferred ✅
-# ══════════════════════════════════════════════════════
-("Affirm",       "greenhouse", "affirm",        1, "remote"),
-("Zillow",       "greenhouse", "zillow",        1, "remote"),
-("Airbnb",       "greenhouse", "airbnb",        1, "remote"),
-("Adyen",        "greenhouse", "adyen",         1, "remote"),
-("NerdWallet",   "greenhouse", "nerdwallet",    1, "remote"),
-("ThePointsGuy", "greenhouse", "thepointsguy",  1, "remote"),
-("Block",        "greenhouse", "block",         1, "remote"),
-("Coinbase",     "greenhouse", "coinbase",      1, "remote"),
-("SoFi",         "greenhouse", "sofi",          1, "remote"),
-("Wealthfront",  "greenhouse", "wealthfront",   1, "remote"),
-("Wise",         "lever",      "transferwise",  1, "remote"),
-("HubSpot",      "greenhouse", "hubspot",       1, "remote"),
-("GitHub",       "greenhouse", "github",        1, "remote"),
-("Dropbox",      "greenhouse", "dropbox",       1, "remote"),
-("Figma",        "lever",      "figma",         1, "remote"),
-("Miro",         "greenhouse", "miro",          1, "remote"),
-("Notion",       "ashby",      "notion",        1, "remote"),
-("Zapier",       "greenhouse", "zapier",        1, "remote"),
-("Scale AI",     "ashby",      "scaleai",       1, "remote"),
-("Glean",        "ashby",      "glean",         1, "remote"),
-("Apollo.io",    "greenhouse", "apollo",        1, "remote"),
-("Bumble",       "greenhouse", "bumble",        1, "remote"),
-("Canva",        "greenhouse", "canva",         1, "remote"),
-("Realtor.com",  "greenhouse", "realtordotcom", 1, "remote"),
-("Spotify",      "lever",      "spotify",       1, "remote"),
-("Pinterest",    "greenhouse", "pinterest",     1, "remote"),
-("Marqeta",      "greenhouse", "marqeta",       1, "remote"),
-("Bankrate",     "greenhouse", "bankrate",      1, "remote"),
-("Reddit",       "greenhouse", "reddit",        1, "remote"),
-("Docker",       "greenhouse", "docker",        1, "remote"),
-("PayPal",       "workday",    None,            1, "remote"),  # Phase 2
-("Intuit",       "workday",    None,            1, "remote"),  # Phase 2
-("Atlassian",    "workday",    None,            1, "remote"),  # Phase 2
-("Adobe",        "workday",    None,            1, "remote"),  # Phase 2
+    # ======================================================
+    # TIER 1 -- Remote Preferred ✅
+    # ======================================================
+    ("Affirm",       "greenhouse", "affirm",        1, "remote"),
+    ("Zillow",       "greenhouse", "zillow",        1, "remote"),
+    ("Airbnb",       "greenhouse", "airbnb",        1, "remote"),
+    ("Adyen",        "greenhouse", "adyen",         1, "remote"),
+    ("NerdWallet",   "greenhouse", "nerdwallet",    1, "remote"),
+    ("ThePointsGuy", "greenhouse", "thepointsguy",  1, "remote"),
+    ("Block",        "greenhouse", "block",         1, "remote"),
+    ("Coinbase",     "greenhouse", "coinbase",      1, "remote"),
+    ("SoFi",         "greenhouse", "sofi",          1, "remote"),
+    ("Wealthfront",  "greenhouse", "wealthfront",   1, "remote"),
+    ("Wise",         "lever",      "transferwise",  1, "remote"),
+    ("HubSpot",      "greenhouse", "hubspot",       1, "remote"),
+    ("GitHub",       "greenhouse", "github",        1, "remote"),
+    ("Dropbox",      "greenhouse", "dropbox",       1, "remote"),
+    ("Figma",        "lever",      "figma",         1, "remote"),
+    ("Miro",         "greenhouse", "miro",          1, "remote"),
+    ("Notion",       "ashby",      "notion",        1, "remote"),
+    ("Zapier",       "greenhouse", "zapier",        1, "remote"),
+    ("Scale AI",     "ashby",      "scaleai",       1, "remote"),
+    ("Glean",        "ashby",      "glean",         1, "remote"),
+    ("Apollo.io",    "greenhouse", "apollo",        1, "remote"),
+    ("Bumble",       "greenhouse", "bumble",        1, "remote"),
+    ("Canva",        "greenhouse", "canva",         1, "remote"),
+    ("Realtor.com",  "greenhouse", "realtordotcom", 1, "remote"),
+    ("Spotify",      "lever",      "spotify",       1, "remote"),
+    ("Pinterest",    "greenhouse", "pinterest",     1, "remote"),
+    ("Marqeta",      "greenhouse", "marqeta",       1, "remote"),
+    ("Bankrate",     "greenhouse", "bankrate",      1, "remote"),
+    ("Reddit",       "greenhouse", "reddit",        1, "remote"),
+    ("Docker",       "greenhouse", "docker",        1, "remote"),
+    ("PayPal",       "workday",    None,            1, "remote"),  # Phase 2
+    ("Intuit",       "workday",    None,            1, "remote"),  # Phase 2
+    ("Atlassian",    "workday",    None,            1, "remote"),  # Phase 2
+    ("Adobe",        "workday",    None,            1, "remote"),  # Phase 2
 
-# ══════════════════════════════════════════════════════
-# TIER 2 — Open To It
-# ══════════════════════════════════════════════════════
-("Toast",        "greenhouse", "toasttab",      2, "ok"),
-("SurveyMonkey", "greenhouse", "surveymonkey",  2, "ok"),
-("Hopper",       "greenhouse", "hopper",        2, "ok"),
-("eBay",         "greenhouse", "ebay",          2, "ok"),
-("Nextdoor",     "greenhouse", "nextdoor",      2, "ok"),
-("Experian",     "workday",    None,            2, "ok"),      # Phase 2
-```
+    # ======================================================
+    # TIER 2 -- Open To It
+    # ======================================================
+    ("Toast",        "greenhouse", "toasttab",      2, "ok"),
+    ("SurveyMonkey", "greenhouse", "surveymonkey",  2, "ok"),
+    ("Hopper",       "greenhouse", "hopper",        2, "ok"),
+    ("eBay",         "greenhouse", "ebay",          2, "ok"),
+    ("Nextdoor",     "greenhouse", "nextdoor",      2, "ok"),
+    ("Experian",     "workday",    None,            2, "ok"),      # Phase 2
 
 ]
 
-# Auto-split — used by run_scraper.py, don’t edit
-
-SCRAPEABLE   = [c for c in COMPANIES if c[1] in (“greenhouse”,“lever”,“ashby”) and c[2] is not None]
-WORKDAY_SKIP = [c for c in COMPANIES if c[1] == “workday”]
+# Auto-split -- used by run_scraper.py, don't edit
+SCRAPEABLE   = [c for c in COMPANIES if c[1] in ("greenhouse","lever","ashby") and c[2] is not None]
+WORKDAY_SKIP = [c for c in COMPANIES if c[1] == "workday"]
