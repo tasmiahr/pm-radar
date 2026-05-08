@@ -1,21 +1,7 @@
 #!/usr/bin/env python3
-"""
-export_dashboard.py -- Export jobs.db → dashboard_data.json
----------------------------------------------------------
 
-Reads data/jobs.db and writes dashboard_data.json.
-Called by GitHub Actions after run_scraper.py.
-Also works locally: python export_dashboard.py
 
-Output format:
-  {
-    "meta": { "exported_at": "...", "total": N, "new_this_run": N },
-    "jobs": [ {...}, ... ]
-  }
 
-The dashboard reads this file automatically when served over HTTP.
-The "new_this_run" count drives the (+N new) badge in the header.
-"""
 
 import argparse
 import json
@@ -66,7 +52,7 @@ def export(keyword=None, days=None, hours=None, risk=None, out_path=OUT_PATH):
             ghost_risk, ghost_reason,
             first_seen, last_seen, status,
             match_score, notes,
-            NULL AS salary,
+            salary,
             NULL AS applicants
         FROM jobs
         WHERE {' AND '.join(where)}

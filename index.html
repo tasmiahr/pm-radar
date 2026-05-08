@@ -3,1042 +3,1464 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobRadar — Pipeline Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<title>JobRadar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:        #0a0c0f;
-    --surface:   #111418;
-    --surface2:  #181c22;
-    --border:    #232830;
-    --border2:   #2e3540;
-    --text:      #d4dae4;
-    --muted:     #5a6478;
-    --accent:    #3b82f6;
-    --accent-dim:#1d4ed8;
-    --green:     #22c55e;
-    --yellow:    #eab308;
-    --red:       #ef4444;
-    --orange:    #f97316;
-    --purple:    #a855f7;
-    --mono:      'IBM Plex Mono', monospace;
-    --sans:      'IBM Plex Sans', sans-serif;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 13px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── HEADER ── */
-  header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 24px;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .logo-icon {
-    width: 28px; height: 28px;
-    background: var(--accent);
-    border-radius: 6px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-  }
-
-  .logo-text {
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    color: #fff;
-  }
-
-  .logo-sub {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--mono);
-    margin-top: 1px;
-  }
-
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
-
-  .last-run {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .pulse {
-    display: inline-block;
-    width: 7px; height: 7px;
-    background: var(--green);
-    border-radius: 50%;
-    margin-right: 6px;
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
-  }
-
-  .btn-load {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 5px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 500;
-    cursor: pointer;
-    letter-spacing: 0.04em;
-    transition: background 0.15s;
-  }
-  .btn-load:hover { background: var(--accent-dim); }
-
-  /* ── STATS BAR ── */
-  .stats-bar {
-    display: flex;
-    gap: 1px;
-    background: var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .stat {
-    flex: 1;
-    padding: 12px 20px;
-    background: var(--surface);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-  }
-
-  .stat-value {
-    font-family: var(--mono);
-    font-size: 22px;
-    font-weight: 600;
-    color: #fff;
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .stat-value.green  { color: var(--green); }
-  .stat-value.yellow { color: var(--yellow); }
-  .stat-value.red    { color: var(--red); }
-  .stat-value.blue   { color: var(--accent); }
-
-  /* ── TOOLBAR ── */
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 24px;
-    background: var(--surface2);
-    border-bottom: 1px solid var(--border);
-    flex-wrap: wrap;
-  }
-
-  .search-wrap {
-    position: relative;
-    flex: 1;
-    min-width: 200px;
-    max-width: 320px;
-  }
-
-  .search-wrap svg {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--muted);
-    pointer-events: none;
-  }
-
-  input[type=text], select {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 12px;
-    border-radius: 5px;
-    padding: 7px 10px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-
-  input[type=text] { padding-left: 32px; width: 100%; }
-
-  input[type=text]:focus, select:focus { border-color: var(--accent); }
-
-  select { cursor: pointer; min-width: 120px; }
-
-  select option { background: var(--surface2); }
-
-  .filter-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .filter-label {
-    font-size: 11px;
-    color: var(--muted);
-    font-family: var(--mono);
-    white-space: nowrap;
-  }
-
-  .chip-group {
-    display: flex;
-    gap: 4px;
-  }
-
-  .chip {
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--border2);
-    background: var(--surface);
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    cursor: pointer;
-    transition: all 0.12s;
-    white-space: nowrap;
-  }
-  .chip:hover { border-color: var(--accent); color: var(--accent); }
-  .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
-
-  .result-count {
-    margin-left: auto;
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    white-space: nowrap;
-  }
-
-  /* ── TABLE ── */
-  .table-wrap {
-    overflow-x: auto;
-    padding: 0 24px 40px;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 16px;
-    table-layout: fixed;
-  }
-
-  thead th {
-    font-family: var(--mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 8px 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
-    background: var(--surface2);
-    position: sticky;
-    top: 57px;
-  }
-
-  thead th:hover { color: var(--text); }
-  thead th.sorted { color: var(--accent); }
-  thead th.sorted::after { content: ' ↓'; }
-  thead th.sorted.asc::after { content: ' ↑'; }
-
-  /* Column widths */
-  .col-posted   { width: 110px; }
-  .col-company  { width: 130px; }
-  .col-title    { width: auto;  }
-  .col-location { width: 130px; }
-  .col-legit    { width: 80px;  }
-  .col-salary   { width: 120px; }
-  .col-source   { width: 90px;  }
-  .col-match    { width: 80px;  }
-  .col-apply    { width: 60px;  }
-
-  tbody tr {
-    border-bottom: 1px solid var(--border);
-    transition: background 0.1s;
-  }
-
-  tbody tr:hover { background: var(--surface2); }
-
-  tbody td {
-    padding: 10px 12px;
-    vertical-align: middle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 0;
-  }
-
-  .td-posted {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .td-posted .age-fresh  { color: var(--green); font-weight: 600; }
-  .td-posted .age-recent { color: var(--yellow); }
-  .td-posted .age-old    { color: var(--muted); }
-
-  .td-company {
-    font-weight: 500;
-    color: #fff;
-    font-size: 12px;
-  }
-
-  .td-title { color: var(--text); }
-
-  .badge-remote {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    background: rgba(59,130,246,0.12);
-    color: var(--accent);
-    border: 1px solid rgba(59,130,246,0.25);
-    border-radius: 3px;
-    padding: 1px 5px;
-    font-size: 10px;
-    font-family: var(--mono);
-    font-weight: 500;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-
-  .badge-hybrid {
-    background: rgba(168,85,247,0.12);
-    color: var(--purple);
-    border-color: rgba(168,85,247,0.25);
-  }
-
-  /* Legit badges */
-  .legit-low {
-    display: inline-flex; align-items: center; gap: 4px;
-    color: var(--green);
-    font-family: var(--mono); font-size: 11px; font-weight: 500;
-  }
-  .legit-medium {
-    color: var(--yellow);
-    font-family: var(--mono); font-size: 11px;
-    display: inline-flex; align-items: center; gap: 4px;
-  }
-  .legit-high {
-    color: var(--red);
-    font-family: var(--mono); font-size: 11px;
-    display: inline-flex; align-items: center; gap: 4px;
-  }
-
-  /* Match score */
-  .match-score {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .match-bar-wrap {
-    width: 36px; height: 4px;
-    background: var(--border2);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .match-bar {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--green);
-    transition: width 0.3s;
-  }
-  .match-bar.med { background: var(--yellow); }
-  .match-bar.low { background: var(--red); }
-
-  .match-num {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .match-na {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--border2);
-  }
-
-  /* Source badge */
-  .source-badge {
-    font-family: var(--mono);
-    font-size: 10px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-  }
-  .source-greenhouse { background: rgba(34,197,94,0.1);  color: #4ade80; border: 1px solid rgba(34,197,94,0.2);  }
-  .source-lever      { background: rgba(251,191,36,0.1); color: #fbbf24; border: 1px solid rgba(251,191,36,0.2); }
-  .source-ashby      { background: rgba(168,85,247,0.1); color: #c084fc; border: 1px solid rgba(168,85,247,0.2); }
-
-  /* Salary */
-  .salary-val {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--green);
-  }
-  .salary-na {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--border2);
-  }
-
-  /* Applicants */
-  .applicants-val {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--yellow);
-  }
-
-  /* Apply link */
-  .apply-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px; height: 28px;
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    border-radius: 4px;
-    color: var(--muted);
-    text-decoration: none;
-    transition: all 0.12s;
-    font-size: 13px;
-  }
-  .apply-btn:hover {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
-  /* ── EMPTY STATE ── */
-  .empty {
-    text-align: center;
-    padding: 80px 24px;
-    color: var(--muted);
-  }
-  .empty-icon { font-size: 48px; margin-bottom: 16px; }
-  .empty h3 { font-size: 16px; color: var(--text); margin-bottom: 8px; }
-  .empty p  { font-size: 13px; line-height: 1.6; max-width: 480px; margin: 0 auto; }
-  .empty code {
-    background: var(--surface2);
-    border: 1px solid var(--border2);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--accent);
-  }
-
-  /* ── LOAD DATA MODAL ── */
-  .modal-backdrop {
-    display: none;
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-backdrop.open { display: flex; }
-
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 10px;
-    padding: 28px;
-    width: 100%;
-    max-width: 520px;
-    margin: 24px;
-  }
-
-  .modal h2 {
-    font-size: 16px;
-    font-weight: 600;
-    margin-bottom: 6px;
-    color: #fff;
-  }
-
-  .modal p {
-    color: var(--muted);
-    font-size: 12px;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-
-  .modal pre {
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    padding: 12px 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--accent);
-    margin-bottom: 20px;
-    overflow-x: auto;
-    line-height: 1.6;
-  }
-
-  .modal-footer {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-  }
-
-  .btn-secondary {
-    background: transparent;
-    border: 1px solid var(--border2);
-    color: var(--muted);
-    padding: 7px 16px;
-    border-radius: 5px;
-    font-family: var(--mono);
-    font-size: 11px;
-    cursor: pointer;
-  }
-  .btn-secondary:hover { border-color: var(--text); color: var(--text); }
-
-  textarea.json-paste {
-    width: 100%;
-    height: 120px;
-    background: var(--bg);
-    border: 1px solid var(--border2);
-    border-radius: 6px;
-    color: var(--text);
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 10px;
-    resize: vertical;
-    outline: none;
-    margin-bottom: 12px;
-  }
-  textarea.json-paste:focus { border-color: var(--accent); }
-
-  .tab-group {
-    display: flex;
-    gap: 2px;
-    margin-bottom: 16px;
-    background: var(--bg);
-    padding: 3px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-  .tab-btn {
-    flex: 1;
-    padding: 6px 10px;
-    background: transparent;
-    border: none;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: all 0.12s;
-  }
-  .tab-btn.active { background: var(--surface2); color: var(--text); }
-
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  .notice {
-    background: rgba(59,130,246,0.08);
-    border: 1px solid rgba(59,130,246,0.2);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 11px;
-    color: var(--accent);
-    margin-bottom: 16px;
-    line-height: 1.6;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #f5f4f1;
+  --surface:    #ffffff;
+  --surface2:   #f9f8f6;
+  --border:     #e8e6e1;
+  --border2:    #d4d0c8;
+  --text:       #1a1916;
+  --muted:      #8a8680;
+  --muted2:     #b5b1a8;
+  --accent:     #2563eb;
+  --accent-bg:  #eff4ff;
+  --green:      #16a34a;
+  --green-bg:   #f0fdf4;
+  --yellow:     #b45309;
+  --yellow-bg:  #fffbeb;
+  --red:        #dc2626;
+  --red-bg:     #fef2f2;
+  --sans:       'DM Sans', sans-serif;
+  --mono:       'DM Mono', monospace;
+  --radius:     8px;
+  --shadow:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.08);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* HEADER */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  width: 30px; height: 30px;
+  background: var(--text);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 14px;
+}
+
+.logo-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+}
+
+.logo-tag {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-bg);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--green);
+  font-family: var(--mono);
+}
+
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: blink 2s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.btn {
+  padding: 7px 14px;
+  border-radius: var(--radius);
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  transition: all 0.15s;
+}
+.btn:hover { background: var(--surface2); border-color: var(--border2); }
+.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
+.btn-primary:hover { background: #333; border-color: #333; }
+
+/* MAIN LAYOUT */
+.layout {
+  display: flex;
+  min-height: calc(100vh - 56px);
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 56px);
+  position: sticky;
+  top: 56px;
+}
+
+.sidebar-section { display: flex; flex-direction: column; gap: 8px; }
+
+.sidebar-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.filter-input-wrap { position: relative; }
+
+.filter-input-wrap svg {
+  position: absolute;
+  left: 9px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted2);
+  pointer-events: none;
+}
+
+input[type=text], select, input[type=number] {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 12px;
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+
+input[type=text]:focus, select:focus, input[type=number]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+}
+
+.filter-input-wrap input { padding-left: 30px; }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8680' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 28px;
+  cursor: pointer;
+}
+
+.duration-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duration-row input[type=number] {
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.duration-row select { flex: 1; }
+
+.toggle-group {
+  display: flex;
+  gap: 4px;
+}
+
+.toggle {
+  flex: 1;
+  padding: 6px 0;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.toggle:hover { border-color: var(--accent); color: var(--accent); }
+.toggle.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.toggle.on-green { background: var(--green); border-color: var(--green); color: #fff; }
+.toggle.on-yellow { background: #d97706; border-color: #d97706; color: #fff; }
+.toggle.on-red { background: var(--red); border-color: var(--red); color: #fff; }
+
+/* Tier config section */
+.tier-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.tier-label { font-size: 12px; font-weight: 500; }
+.tier-sub   { font-size: 10px; color: var(--muted); }
+
+.tier-toggle {
+  width: 32px; height: 18px;
+  background: var(--border2);
+  border-radius: 9px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  flex-shrink: 0;
+}
+.tier-toggle.active { background: var(--accent); }
+.tier-toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+}
+.tier-toggle.active::after { transform: translateX(14px); }
+
+/* Sources panel */
+.source-list { display: flex; flex-direction: column; gap: 4px; }
+
+.source-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 8px;
+  border-radius: 5px;
+  background: var(--surface2);
+}
+
+.source-name {
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.source-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+
+.source-count {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* Applied counter */
+.applied-section {
+  background: var(--accent-bg);
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius);
+  padding: 12px;
+  text-align: center;
+}
+
+.applied-num {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--accent);
+  font-family: var(--mono);
+  line-height: 1;
+}
+
+.applied-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
+.applied-hint  { font-size: 10px; color: var(--muted2); margin-top: 6px; line-height: 1.4; }
+
+/* MAIN CONTENT */
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+/* STATS */
+.stats-row {
+  display: flex;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.stat {
+  flex: 1;
+  background: var(--surface);
+  padding: 14px 20px;
+}
+
+.stat-num {
+  font-size: 24px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--text);
+  line-height: 1;
+}
+
+.stat-lbl {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 3px;
+  white-space: nowrap;
+}
+
+.stat-num.blue   { color: var(--accent); }
+.stat-num.green  { color: var(--green); }
+.stat-num.yellow { color: var(--yellow); }
+.stat-num.red    { color: var(--red); }
+
+/* TOOLBAR */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.search-main {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.search-main svg {
+  position: absolute; left: 10px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted2); pointer-events: none;
+}
+
+.search-main input {
+  padding-left: 32px;
+  background: var(--surface2);
+}
+
+.toolbar-sep {
+  width: 1px; height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.sort-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+.result-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+
+/* TABLE */
+.table-wrap {
+  overflow-x: auto;
+  flex: 1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  background: var(--surface2);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 56px;
+}
+
+thead th:hover { color: var(--text); }
+thead th.sorted { color: var(--accent); }
+thead th.sorted::after { content: ' \2193'; font-size: 10px; }
+thead th.sorted.asc::after { content: ' \2191'; font-size: 10px; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  transition: background 0.1s;
+}
+
+tbody tr:hover { background: #faf9f7; }
+
+tbody td {
+  padding: 11px 14px;
+  vertical-align: middle;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Col widths */
+.col-posted   { width: 105px; }
+.col-company  { width: 130px; }
+.col-title    { width: auto; min-width: 220px; }
+.col-location { width: 150px; }
+.col-legit    { width: 90px; }
+.col-salary   { width: 120px; }
+.col-apps     { width: 90px; }
+.col-source   { width: 100px; }
+.col-match    { width: 80px; }
+.col-action   { width: 80px; }
+
+.td-age {
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.age-fresh  { color: var(--green); font-weight: 500; }
+.age-recent { color: var(--yellow); }
+.age-old    { color: var(--muted); }
+
+.td-company { font-weight: 600; font-size: 12px; }
+
+.loc-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+.loc-remote { background: var(--accent-bg); color: var(--accent); }
+.loc-hybrid { background: #f3f0ff; color: #7c3aed; }
+
+.legit-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: help;
+}
+.legit-low    { background: var(--green-bg);  color: var(--green);  border: 1px solid #bbf7d0; }
+.legit-medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #fde68a; }
+.legit-high   { background: var(--red-bg);    color: var(--red);    border: 1px solid #fecaca; }
+
+.src-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.src-greenhouse     { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.src-lever          { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.src-ashby          { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
+.src-smartrecruiters{ background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.src-workable       { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.src-jazz           { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
+.src-workday        { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+
+.salary-val { font-family: var(--mono); font-size: 11px; color: var(--green); }
+.na-val     { color: var(--muted2); }
+
+.match-wrap { display: flex; align-items: center; gap: 5px; }
+.match-track { width: 32px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.match-fill  { height: 100%; border-radius: 2px; }
+.match-hi    { background: var(--green); }
+.match-mid   { background: #f59e0b; }
+.match-lo    { background: var(--red); }
+.match-num   { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.match-na    { font-size: 11px; color: var(--muted2); }
+
+.action-wrap { display: flex; gap: 4px; align-items: center; }
+
+.apply-link {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.12s;
+}
+.apply-link:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.mark-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  border-radius: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.mark-btn:hover { background: var(--green-bg); border-color: #bbf7d0; color: var(--green); }
+.mark-btn.applied-row { background: var(--green-bg); border-color: #bbf7d0; color: var(--green); }
+
+/* EMPTY STATE */
+.empty-state {
+  padding: 80px 40px;
+  text-align: center;
+  color: var(--muted);
+}
+.empty-icon { font-size: 40px; margin-bottom: 16px; }
+.empty-state h3 { font-size: 16px; color: var(--text); margin-bottom: 8px; font-weight: 600; }
+.empty-state p  { font-size: 13px; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+
+/* MODAL */
+.modal-bg {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.3);
+  z-index: 300; align-items: center; justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-bg.open { display: flex; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  padding: 28px;
+  width: 480px;
+  max-width: calc(100vw - 32px);
+  margin: 16px;
+}
+
+.modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+.modal p  { font-size: 12px; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+
+.modal-tabs {
+  display: flex;
+  gap: 2px;
+  background: var(--surface2);
+  padding: 3px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.mt { flex: 1; padding: 6px; text-align: center; border-radius: 6px;
+  font-size: 12px; font-weight: 500; cursor: pointer; color: var(--muted);
+  background: transparent; border: none; transition: all 0.12s; }
+.mt.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+.tab-pane { display: none; }
+.tab-pane.active { display: block; }
+
+.notice {
+  background: var(--accent-bg);
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #1d4ed8;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+textarea {
+  width: 100%; height: 110px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono); font-size: 11px;
+  padding: 10px; resize: vertical; outline: none;
+  margin-bottom: 12px;
+}
+textarea:focus { border-color: var(--accent); }
+
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header>
   <div class="logo">
-    <div class="logo-icon">📡</div>
+    <div class="logo-mark">&#128225;</div>
     <div>
-      <div class="logo-text">JOBRADAR</div>
-      <div class="logo-sub">Job Pipeline Dashboard</div>
+      <div class="logo-name">JobRadar <span class="logo-tag">/ pipeline</span></div>
     </div>
   </div>
   <div class="header-right">
-    <div class="last-run" id="lastRun"><span class="pulse"></span>—</div>
-    <button class="btn-load" onclick="openModal()">⬆ Load Data</button>
+    <div class="status-pill" id="statusPill">
+      <div class="dot"></div>
+      <span id="lastRun">Loading...</span>
+    </div>
+    <div style="position:relative;display:inline-block" id="loadBtnWrap">
+      <button class="btn" onclick="openModal()" title="Load your job data from dashboard_data.json — generated by running: python export_dashboard.py">Load Data</button>
+    </div>
   </div>
 </header>
 
-<!-- STATS BAR -->
-<div class="stats-bar">
-  <div class="stat">
-    <div class="stat-value blue" id="statTotal">—</div>
-    <div class="stat-label">Total Jobs</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value green" id="statFresh">—</div>
-    <div class="stat-label">Last 24 hrs</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value" id="statWeek">—</div>
-    <div class="stat-label">Last 7 days</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value green" id="statLegit">—</div>
-    <div class="stat-label">✅ Legit</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value yellow" id="statMaybe">—</div>
-    <div class="stat-label">⚠️ Suspect</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value red" id="statGhost">—</div>
-    <div class="stat-label">🚫 Ghost</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value blue" id="statRemote">—</div>
-    <div class="stat-label">🌐 Remote</div>
-  </div>
-  <div class="stat">
-    <div class="stat-value" id="statApplied">—</div>
-    <div class="stat-label">Applied</div>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- FILTERS -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Search</div>
+      <div class="filter-input-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="fSearch" placeholder="Title, company, keyword..." oninput="applyFilters()">
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Job Title</div>
+      <div class="filter-input-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        <input type="text" id="fTitle" placeholder="e.g. Senior PM, Head of..." oninput="applyFilters()">
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Company</div>
+      <div class="filter-input-wrap">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18M9 8h1m4 0h1M9 12h1m4 0h1M9 16h1m4 0h1M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+        <input type="text" id="fCompany" placeholder="e.g. Stripe, Airbnb..." oninput="applyFilters()">
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Location</div>
+      <div class="filter-input-wrap" style="margin-bottom:6px">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <input type="text" id="fLocation" placeholder="City, state, or country..." oninput="applyFilters()">
+      </div>
+      <div class="toggle-group">
+        <button class="toggle" id="tgRemote" onclick="toggleWorkType('remote')">Remote</button>
+        <button class="toggle" id="tgHybrid" onclick="toggleWorkType('hybrid')">Hybrid</button>
+        <button class="toggle" id="tgOnsite" onclick="toggleWorkType('onsite')">On-site</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Posted Within</div>
+      <div class="duration-row">
+        <input type="number" id="fDurVal" min="1" max="999" placeholder="60" value="60" oninput="applyFilters()">
+        <select id="fDurUnit" onchange="applyFilters()">
+          <option value="hours">Hours</option>
+          <option value="days" selected>Days</option>
+          <option value="weeks">Weeks</option>
+          <option value="months">Months</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Legitimacy</div>
+      <div class="toggle-group">
+        <button class="toggle on-green" id="tgLow"    onclick="toggleFilter('low')"   >Legit</button>
+        <button class="toggle on-yellow" id="tgMed"   onclick="toggleFilter('medium')">Maybe</button>
+        <button class="toggle on-red" id="tgHigh"     onclick="toggleFilter('high')" >Ghost</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-title">Source</div>
+      <div class="toggle-group" style="flex-wrap:wrap;gap:4px">
+        <button class="toggle" id="tgGH" onclick="toggleFilter('greenhouse')" style="flex:none;padding:5px 8px">GH</button>
+        <button class="toggle" id="tgLV" onclick="toggleFilter('lever')" style="flex:none;padding:5px 8px">Lever</button>
+        <button class="toggle" id="tgAB" onclick="toggleFilter('ashby')" style="flex:none;padding:5px 8px">Ashby</button>
+        <button class="toggle" id="tgSR" onclick="toggleFilter('smartrecruiters')" style="flex:none;padding:5px 8px">SR</button>
+        <button class="toggle" id="tgWK" onclick="toggleFilter('workable')" style="flex:none;padding:5px 8px">WK</button>
+        <button class="toggle" id="tgJZ" onclick="toggleFilter('jazz')" style="flex:none;padding:5px 8px">Jazz</button>
+        <button class="toggle" id="tgWD" onclick="toggleFilter('workday')" style="flex:none;padding:5px 8px">WD</button>
+      </div>
+    </div>
+
+    <!-- TIER MANAGER -->
+    <div class="sidebar-section">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px">
+        <div class="sidebar-title" style="margin:0">Company Tiers</div>
+        <button class="btn" style="padding:3px 8px;font-size:11px" onclick="openTierModal()">Edit</button>
+      </div>
+      <div id="tierSummary" style="display:flex;flex-direction:column;gap:4px"></div>
+    </div>
+
+    <!-- SOURCES BREAKDOWN -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Data Sources</div>
+      <div class="source-list" id="sourceList">
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#16a34a"></span>Greenhouse</span>
+          <span class="source-count" id="srcGH">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#ea580c"></span>Lever</span>
+          <span class="source-count" id="srcLV">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#7c3aed"></span>Ashby</span>
+          <span class="source-count" id="srcAB">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#0369a1"></span>SmartRecruiters</span>
+          <span class="source-count" id="srcSR">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#b45309"></span>Workable</span>
+          <span class="source-count" id="srcWK">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#be185d"></span>Jazz</span>
+          <span class="source-count" id="srcJZ">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#0f766e"></span>Workday</span>
+          <span class="source-count" id="srcWD">--</span>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--muted2);margin-top:6px;padding:0 4px;line-height:1.5">
+        All data pulled directly from company ATS APIs. No third-party job boards.
+      </div>
+    </div>
+
+    <!-- APPLIED -->
+    <div class="sidebar-section">
+      <div class="sidebar-title">Applications</div>
+      <div class="applied-section">
+        <div class="applied-num" id="appliedCount">0</div>
+        <div class="applied-label">Jobs Applied</div>
+        <div class="applied-hint">
+          Click the <strong style="color:var(--green)">&#10003;</strong> button on any row to mark it applied. It turns green. Click again to undo.<br><br>
+          Saved by job ID in your browser. If the posting disappears from the scraper (company closed it), your applied record stays &mdash; you can still see it in the Applied log below.
+        </div>
+      </div>
+      <button class="btn" style="width:100%;font-size:11px;margin-top:4px" onclick="filterApplied()">Show Applied Only</button>
+      <div id="appliedLog" style="margin-top:8px;display:none;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px 0"></div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat">
+        <div class="stat-num blue" id="sTotal">—</div>
+        <div class="stat-lbl">Total Jobs</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num green" id="s24h">—</div>
+        <div class="stat-lbl">Last 24h</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num" id="s7d">—</div>
+        <div class="stat-lbl">Last 7 days</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num green" id="sLegit">—</div>
+        <div class="stat-lbl">Legit</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num red" id="sGhost">—</div>
+        <div class="stat-lbl">Ghost</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num blue" id="sRemote">—</div>
+        <div class="stat-lbl">Remote</div>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <span class="sort-label">Sort by</span>
+      <select id="sortSelect" onchange="applyFilters()" style="width:auto;min-width:140px;background:var(--surface2)">
+        <option value="hours_old">Most Recent First</option>
+        <option value="days_old_asc">Oldest First</option>
+        <option value="company">Company A-Z</option>
+        <option value="title">Title A-Z</option>
+        <option value="match_score">Match Score</option>
+        <option value="ghost_risk">Legitimacy</option>
+      </select>
+      <div class="toolbar-sep"></div>
+      <span class="result-info" id="resultInfo">— jobs</span>
+      <button class="btn" onclick="exportCSV()" style="margin-left:4px;font-size:11px;padding:6px 10px">Export CSV</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">&#128225;</div>
+        <h3>No data loaded</h3>
+        <p>Click <strong>Load Data</strong> to import your job listings, or wait for the auto-refresh if you're on the live URL.</p>
+      </div>
+      <table id="jobTable" style="display:none">
+        <thead>
+          <tr>
+            <th class="col-posted sorted" onclick="clickSort('hours_old')">Posted</th>
+            <th class="col-company" onclick="clickSort('company')">Company</th>
+            <th class="col-title" onclick="clickSort('title')">Job Title</th>
+            <th class="col-location" onclick="clickSort('location')">Location</th>
+            <th class="col-legit" onclick="clickSort('ghost_risk')">Legit?</th>
+            <th class="col-salary" onclick="clickSort('salary')">Salary</th>
+            <th class="col-apps" onclick="clickSort('applicants')">Applicants</th>
+            <th class="col-source" onclick="clickSort('source')">Source</th>
+            <th class="col-match" onclick="clickSort('match_score')">Match</th>
+            <th class="col-action">Apply</th>
+          </tr>
+        </thead>
+        <tbody id="jobTbody"></tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 
-<!-- TOOLBAR -->
-<div class="toolbar">
-  <div class="search-wrap">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-    <input type="text" id="searchInput" placeholder="Search title, company..." oninput="applyFilters()">
-  </div>
-
-  <div class="filter-group">
-    <span class="filter-label">TIER</span>
-    <div class="chip-group" id="tierChips">
-      <div class="chip active" data-val="all" onclick="setChip(this,'tier')">All</div>
-      <div class="chip" data-val="0" onclick="setChip(this,'tier')">T0 Hybrid</div>
-      <div class="chip" data-val="1" onclick="setChip(this,'tier')">T1 Remote</div>
-      <div class="chip" data-val="2" onclick="setChip(this,'tier')">T2 OK</div>
-    </div>
-  </div>
-
-  <div class="filter-group">
-    <span class="filter-label">LEGIT</span>
-    <div class="chip-group" id="legitChips">
-      <div class="chip active" data-val="all" onclick="setChip(this,'legit')">All</div>
-      <div class="chip" data-val="low" onclick="setChip(this,'legit')">✅ Legit</div>
-      <div class="chip" data-val="medium" onclick="setChip(this,'legit')">⚠️ Maybe</div>
-      <div class="chip" data-val="high" onclick="setChip(this,'legit')">🚫 Ghost</div>
-    </div>
-  </div>
-
-  <div class="filter-group">
-    <span class="filter-label">POSTED</span>
-    <div class="chip-group" id="ageChips">
-      <div class="chip active" data-val="all"  onclick="setChip(this,'age')">All</div>
-      <div class="chip" data-val="6"   onclick="setChip(this,'age')">6h</div>
-      <div class="chip" data-val="12"  onclick="setChip(this,'age')">12h</div>
-      <div class="chip" data-val="24"  onclick="setChip(this,'age')">24h</div>
-      <div class="chip" data-val="72"  onclick="setChip(this,'age')">3d</div>
-      <div class="chip" data-val="168" onclick="setChip(this,'age')">7d</div>
-    </div>
-  </div>
-
-  <span class="result-count" id="resultCount">— jobs</span>
-</div>
-
-<!-- TABLE -->
-<div class="table-wrap" id="tableWrap">
-  <div class="empty" id="emptyState">
-    <div class="empty-icon">📡</div>
-    <h3>No data loaded yet</h3>
-    <p>
-      If you opened this from GitHub Pages, data loads automatically once the
-      Actions workflow has run at least once.<br><br>
-      To load manually: run <code>python export_dashboard.py</code> then use
-      the <strong>Load Data</strong> button above.<br><br>
-      To trigger a scrape now: go to your repo → Actions → Daily Job Scrape → Run workflow.
-    </p>
-  </div>
-  <table id="jobTable" style="display:none">
-    <thead>
-      <tr>
-        <th class="col-posted  sorted" onclick="sortBy('hours_old')">POSTED</th>
-        <th class="col-company"        onclick="sortBy('company')">COMPANY</th>
-        <th class="col-title"          onclick="sortBy('title')">JOB TITLE</th>
-        <th class="col-location"       onclick="sortBy('location')">LOCATION</th>
-        <th class="col-legit"          onclick="sortBy('ghost_risk')">LEGIT?</th>
-        <th class="col-salary"         onclick="sortBy('salary')">SALARY</th>
-        <th                            onclick="sortBy('applicants')">APPLICANTS</th>
-        <th class="col-source"         onclick="sortBy('source')">SOURCE</th>
-        <th class="col-match"          onclick="sortBy('match_score')">MATCH</th>
-        <th class="col-apply">APPLY</th>
-      </tr>
-    </thead>
-    <tbody id="jobTbody"></tbody>
-  </table>
-</div>
-
-<!-- LOAD DATA MODAL -->
-<div class="modal-backdrop" id="modalBackdrop" onclick="closeModalOutside(event)">
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="closeModalOut(event)">
   <div class="modal">
     <h2>Load Job Data</h2>
-    <p>Export from your database and paste the JSON here, or load the file directly.</p>
-
-    <div class="tab-group">
-      <button class="tab-btn active" onclick="switchTab('paste')">Paste JSON</button>
-      <button class="tab-btn" onclick="switchTab('file')">Load File</button>
-      <button class="tab-btn" onclick="switchTab('sample')">Sample Data</button>
+    <p>
+      <strong>What this does:</strong> Imports your scraped job listings into the dashboard.<br>
+      If you're on the live Netlify URL, data loads automatically every time the GitHub Action runs (every 6 hours).<br>
+      Use this button to manually load a fresh export or to load from your local machine.
+    </p>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:12px;margin-bottom:14px;font-family:var(--mono);color:var(--muted)">
+      python export_dashboard.py &rarr; creates dashboard_data.json
     </div>
-
-    <div class="tab-content active" id="tab-paste">
-      <div class="notice">
-        Run <strong>python export_dashboard.py</strong> in your jobradar folder,<br>
-        then copy the contents of <strong>dashboard_data.json</strong> and paste below.
-      </div>
-      <textarea class="json-paste" id="jsonPaste" placeholder='[{"company":"Stripe","title":"Senior PM",...}]'></textarea>
+    <div class="modal-tabs">
+      <button class="mt active" onclick="switchTab('paste')">Paste JSON</button>
+      <button class="mt" onclick="switchTab('file')">Load File</button>
+      <button class="mt" onclick="switchTab('sample')">Sample Data</button>
     </div>
-
-    <div class="tab-content" id="tab-file">
-      <div class="notice">
-        Select the <strong>dashboard_data.json</strong> file generated by export_dashboard.py
-      </div>
-      <input type="file" id="fileInput" accept=".json" onchange="loadFile()" style="color:var(--text);margin-bottom:16px;">
+    <div class="tab-pane active" id="tp-paste">
+      <div class="notice">Run <strong>python export_dashboard.py</strong> &rarr; copy contents of <strong>dashboard_data.json</strong> &rarr; paste below.</div>
+      <textarea id="jsonPaste" placeholder='[{"company":"Stripe","title":"Senior PM",...}]'></textarea>
     </div>
-
-    <div class="tab-content" id="tab-sample">
-      <div class="notice">
-        Load 15 realistic sample jobs to preview the dashboard layout.<br>
-        Replace with your real data when ready.
-      </div>
+    <div class="tab-pane" id="tp-file">
+      <div class="notice">Select the <strong>dashboard_data.json</strong> file generated by export_dashboard.py</div>
+      <input type="file" accept=".json" id="fileInput" onchange="loadFile()" style="margin-bottom:16px;color:var(--text)">
     </div>
-
+    <div class="tab-pane" id="tp-sample">
+      <div class="notice">Load 12 sample jobs to preview the dashboard. Replace with real data when ready.</div>
+    </div>
     <div class="modal-footer">
-      <button class="btn-secondary" onclick="closeModal()">Cancel</button>
-      <button class="btn-load" onclick="loadData()">Load Jobs</button>
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="loadData()">Load Jobs</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIER MANAGER MODAL -->
+<div class="modal-bg" id="tierModalBg" onclick="closeTierOut(event)">
+  <div class="modal" style="max-width:560px">
+    <h2>Manage Company Tiers</h2>
+    <p>Define which tier each company belongs to. Tier controls which jobs show when you filter. Changes save instantly to your browser.</p>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px">
+        <div style="font-weight:600;margin-bottom:2px">Priority 1</div>
+        <div style="color:var(--muted)">Top target companies</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px">
+        <div style="font-weight:600;margin-bottom:2px">Priority 2</div>
+        <div style="color:var(--muted)">Strong interest</div>
+      </div>
+      <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px">
+        <div style="font-weight:600;margin-bottom:2px">Priority 3</div>
+        <div style="color:var(--muted)">Open to it</div>
+      </div>
+    </div>
+    <div style="max-height:340px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius)">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--surface2);position:sticky;top:0">
+            <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)">Company</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)">Tier</th>
+            <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border)">Show</th>
+          </tr>
+        </thead>
+        <tbody id="tierTableBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+      <input type="text" id="newCompanyName" placeholder="Add company name..." style="flex:1">
+      <select id="newCompanyTier" style="width:90px">
+        <option value="0">Priority 1</option>
+        <option value="1" selected>Priority 2</option>
+        <option value="2">Priority 3</option>
+      </select>
+      <button class="btn btn-primary" onclick="addTierCompany()" style="white-space:nowrap">+ Add</button>
+    </div>
+    <div class="modal-footer" style="margin-top:16px">
+      <button class="btn" onclick="resetTiers()">Reset to Defaults</button>
+      <button class="btn btn-primary" onclick="closeTierModal()">Done</button>
     </div>
   </div>
 </div>
 
 <script>
-// ────────────────────────────────────────────────
 // STATE
-// ────────────────────────────────────────────────
 let ALL_JOBS = [];
-let sortCol  = 'hours_old';
-let sortAsc  = true;
-let filters  = { tier: 'all', legit: 'all', age: 'all' };
+let sortCol = 'hours_old';
+let sortAsc = true;
+let activeFilters = { remote: false, hybrid: false, onsite: false, low: true, medium: true, high: true, greenhouse: false, lever: false, ashby: false, smartrecruiters: false, workable: false, jazz: false, workday: false };
+let appliedSet = new Set(JSON.parse(localStorage.getItem('jr_applied') || '[]'));
+let showAppliedOnly = false;
 
-// ────────────────────────────────────────────────
-// SAMPLE DATA (realistic, for demo)
-// ────────────────────────────────────────────────
-const SAMPLE_JOBS = [
-  { id:'gh_001', company:'Stripe',      title:'Senior Product Manager, Payments',         location:'Remote',            remote_ok:1, tier:0, hours_old:2,   days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://stripe.com/jobs', match_score:null, salary:'$175k–$215k', applicants:null },
-  { id:'gh_002', company:'Anthropic',   title:'Product Manager, Developer Experience',    location:'San Francisco, CA', remote_ok:0, tier:0, hours_old:5,   days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'lever',      url:'https://anthropic.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'gh_003', company:'Airbnb',      title:'Staff Product Manager, Hosting',           location:'Remote, USA',       remote_ok:1, tier:1, hours_old:11,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://airbnb.com/careers', match_score:null, salary:'$190k–$230k', applicants:null },
-  { id:'gh_004', company:'Coinbase',    title:'Senior PM, Consumer Products',             location:'Remote',            remote_ok:1, tier:1, hours_old:14,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://coinbase.com/careers', match_score:null, salary:'$185k–$220k', applicants:null },
-  { id:'lv_005', company:'Figma',       title:'Product Manager, Collaboration',           location:'Remote',            remote_ok:1, tier:1, hours_old:19,  days_old:0,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'lever',      url:'https://figma.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'ab_006', company:'Notion',      title:'Senior PM, Core Editor',                  location:'New York, NY',      remote_ok:0, tier:1, hours_old:27,  days_old:1,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'ashby',      url:'https://notion.so/careers', match_score:null, salary:'$160k–$195k', applicants:null },
-  { id:'gh_007', company:'Reddit',      title:'Senior Product Manager, Ads',              location:'Remote',            remote_ok:1, tier:1, hours_old:31,  days_old:1,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://reddit.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'gh_008', company:'HubSpot',     title:'Group Product Manager, CRM',               location:'Remote, USA',       remote_ok:1, tier:1, hours_old:48,  days_old:2,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://hubspot.com/careers', match_score:null, salary:'$155k–$185k', applicants:null },
-  { id:'gh_009', company:'Cloudflare',  title:'PM, Zero Trust Products',                  location:'Austin, TX',        remote_ok:0, tier:0, hours_old:55,  days_old:2,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'greenhouse', url:'https://cloudflare.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'ab_010', company:'Glean',       title:'Product Manager, Enterprise Search',       location:'Remote',            remote_ok:1, tier:1, hours_old:72,  days_old:3,  ghost_risk:'low',    ghost_reason:'fresh posting', source:'ashby',      url:'https://glean.com/careers', match_score:null, salary:'$165k–$200k', applicants:null },
-  { id:'gh_011', company:'Zillow',      title:'Senior PM, Mortgage Experience',           location:'Remote',            remote_ok:1, tier:1, hours_old:98,  days_old:4,  ghost_risk:'medium', ghost_reason:'4d old, monitor', source:'greenhouse', url:'https://zillow.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'gh_012', company:'Pinterest',   title:'Staff Product Manager, Shopping',          location:'Remote',            remote_ok:1, tier:1, hours_old:120, days_old:5,  ghost_risk:'medium', ghost_reason:'5d old', source:'greenhouse', url:'https://pinterest.com/careers', match_score:null, salary:'$200k–$240k', applicants:null },
-  { id:'lv_013', company:'Spotify',     title:'Senior PM, Podcast Discovery',             location:'New York, NY',      remote_ok:0, tier:1, hours_old:145, days_old:6,  ghost_risk:'medium', ghost_reason:'6d old', source:'lever',      url:'https://spotify.com/careers', match_score:null, salary:null, applicants:null },
-  { id:'gh_014', company:'Affirm',      title:'Product Manager, Underwriting',            location:'Remote',            remote_ok:1, tier:1, hours_old:168, days_old:7,  ghost_risk:'medium', ghost_reason:'7d old', source:'greenhouse', url:'https://affirm.com/careers', match_score:null, salary:'$145k–$175k', applicants:null },
-  { id:'gh_015', company:'Toast',       title:'Senior PM, Payments & Commerce',           location:'Boston, MA',        remote_ok:0, tier:2, hours_old:480, days_old:20, ghost_risk:'high',   ghost_reason:'20d old — possible ghost', source:'greenhouse', url:'https://toasttab.com/careers', match_score:null, salary:null, applicants:null },
+function saveApplied() { localStorage.setItem('jr_applied', JSON.stringify([...appliedSet])); }
+
+// SAMPLE
+const SAMPLE = [
+  {id:'s1',company:'Stripe',title:'Senior Product Manager, Payments',location:'Remote, USA',remote_ok:1,tier:0,hours_old:3,days_old:0,ghost_risk:'low',ghost_reason:'fresh',source:'greenhouse',url:'#',match_score:null,salary:'$175k-$215k',applicants:null,work_pref:'hybrid'},
+  {id:'s2',company:'Anthropic',title:'Product Manager, Developer Experience',location:'San Francisco, CA',remote_ok:0,tier:0,hours_old:7,days_old:0,ghost_risk:'low',ghost_reason:'fresh',source:'lever',url:'#',match_score:null,salary:null,applicants:null,work_pref:'hybrid'},
+  {id:'s3',company:'Airbnb',title:'Staff Product Manager, Hosting',location:'Remote, USA',remote_ok:1,tier:1,hours_old:14,days_old:0,ghost_risk:'low',ghost_reason:'fresh',source:'greenhouse',url:'#',match_score:null,salary:'$190k-$230k',applicants:null,work_pref:'remote'},
+  {id:'s4',company:'Coinbase',title:'Senior PM, Consumer Products',location:'Remote',remote_ok:1,tier:1,hours_old:22,days_old:0,ghost_risk:'low',ghost_reason:'fresh',source:'greenhouse',url:'#',match_score:null,salary:'$185k-$220k',applicants:null,work_pref:'remote'},
+  {id:'s5',company:'Figma',title:'Product Manager, Collaboration',location:'Remote',remote_ok:1,tier:1,hours_old:30,days_old:1,ghost_risk:'low',ghost_reason:'fresh',source:'lever',url:'#',match_score:null,salary:null,applicants:null,work_pref:'remote'},
+  {id:'s6',company:'Notion',title:'Senior PM, Core Editor',location:'New York, NY',remote_ok:0,tier:1,hours_old:50,days_old:2,ghost_risk:'low',ghost_reason:'fresh',source:'ashby',url:'#',match_score:null,salary:'$160k-$195k',applicants:null,work_pref:'remote'},
+  {id:'s7',company:'Reddit',title:'Senior Product Manager, Ads',location:'Remote, USA',remote_ok:1,tier:1,hours_old:75,days_old:3,ghost_risk:'low',ghost_reason:'fresh',source:'greenhouse',url:'#',match_score:null,salary:null,applicants:null,work_pref:'remote'},
+  {id:'s8',company:'HubSpot',title:'Group Product Manager, CRM',location:'Remote, USA',remote_ok:1,tier:1,hours_old:100,days_old:4,ghost_risk:'medium',ghost_reason:'4d old',source:'greenhouse',url:'#',match_score:null,salary:'$155k-$185k',applicants:null,work_pref:'remote'},
+  {id:'s9',company:'Cloudflare',title:'PM, Zero Trust Products',location:'Austin, TX',remote_ok:0,tier:0,hours_old:130,days_old:5,ghost_risk:'medium',ghost_reason:'5d old',source:'greenhouse',url:'#',match_score:null,salary:null,applicants:null,work_pref:'hybrid'},
+  {id:'s10',company:'Glean',title:'Product Manager, Enterprise Search',location:'Remote',remote_ok:1,tier:1,hours_old:168,days_old:7,ghost_risk:'medium',ghost_reason:'7d old',source:'ashby',url:'#',match_score:null,salary:'$165k-$200k',applicants:null,work_pref:'remote'},
+  {id:'s11',company:'Pinterest',title:'Staff Product Manager, Shopping',location:'Remote',remote_ok:1,tier:1,hours_old:290,days_old:12,ghost_risk:'high',ghost_reason:'12d old',source:'greenhouse',url:'#',match_score:null,salary:'$200k-$240k',applicants:null,work_pref:'remote'},
+  {id:'s12',company:'Toast',title:'Senior PM, Payments',location:'Boston, MA',remote_ok:0,tier:2,hours_old:480,days_old:20,ghost_risk:'high',ghost_reason:'20d old',source:'greenhouse',url:'#',match_score:null,salary:null,applicants:null,work_pref:'ok'},
 ];
 
-// ────────────────────────────────────────────────
 // MODAL
-// ────────────────────────────────────────────────
-function openModal()  { document.getElementById('modalBackdrop').classList.add('open'); }
-function closeModal() { document.getElementById('modalBackdrop').classList.remove('open'); }
-function closeModalOutside(e) { if (e.target.id === 'modalBackdrop') closeModal(); }
+function openModal()  { document.getElementById('modalBg').classList.add('open'); }
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+function closeModalOut(e) { if (e.target.id==='modalBg') closeModal(); }
 
 let activeTab = 'paste';
-function switchTab(tab) {
-  activeTab = tab;
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    const tabs = ['paste','file','sample'];
-    b.classList.toggle('active', tabs[i] === tab);
-  });
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
+function switchTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.mt').forEach((b,i) => b.classList.toggle('active', ['paste','file','sample'][i]===t));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById('tp-'+t).classList.add('active');
 }
 
 function loadFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const data = JSON.parse(e.target.result);
-      ingestJobs(data);
-      closeModal();
-    } catch { alert('Invalid JSON file.'); }
-  };
-  reader.readAsText(file);
+  const f = document.getElementById('fileInput').files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => { try { ingest(JSON.parse(e.target.result)); closeModal(); } catch { alert('Invalid JSON'); } };
+  r.readAsText(f);
 }
 
 function loadData() {
-  if (activeTab === 'sample') {
-    ingestJobs(SAMPLE_JOBS);
-    closeModal();
-    return;
-  }
-  if (activeTab === 'file') { loadFile(); return; }
-  // paste tab
+  if (activeTab==='sample') { ingest(SAMPLE); closeModal(); return; }
+  if (activeTab==='file')   { loadFile(); return; }
   const raw = document.getElementById('jsonPaste').value.trim();
-  if (!raw) { alert('Paste your JSON first.'); return; }
-  try {
-    const data = JSON.parse(raw);
-    ingestJobs(Array.isArray(data) ? data : data.jobs || []);
-    closeModal();
-  } catch(e) { alert('Invalid JSON: ' + e.message); }
+  if (!raw) { alert('Paste JSON first'); return; }
+  try { ingest(JSON.parse(raw)); closeModal(); } catch(e) { alert('Invalid JSON: '+e.message); }
 }
 
-// ────────────────────────────────────────────────
 // INGEST
-// ────────────────────────────────────────────────
-function ingestJobs(jobs) {
-  ALL_JOBS = jobs;
+function ingest(data) {
+  ALL_JOBS = Array.isArray(data) ? data : (data.jobs || []);
   updateStats();
+  updateSources();
+  updateApplied();
   applyFilters();
 
-  const now = new Date().toLocaleString('en-US', { hour:'numeric', minute:'2-digit', hour12:true, month:'short', day:'numeric' });
-  document.getElementById('lastRun').innerHTML = `<span class="pulse"></span>Updated ${now}`;
+  if (data.meta) {
+    const n = data.meta.new_this_run ?? null;
+    const t = data.meta.exported_at || new Date().toLocaleString();
+    const badge = n > 0 ? ` (+${n} new)` : '';
+    document.getElementById('lastRun').textContent = `Updated ${t}${badge}`;
+  } else {
+    document.getElementById('lastRun').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  }
 }
 
-// ────────────────────────────────────────────────
 // STATS
-// ────────────────────────────────────────────────
 function updateStats() {
-  const jobs = ALL_JOBS;
-  document.getElementById('statTotal').textContent   = jobs.length;
-  document.getElementById('statFresh').textContent   = jobs.filter(j => (j.hours_old ?? 9999) <= 24).length;
-  document.getElementById('statWeek').textContent    = jobs.filter(j => (j.days_old  ?? 9999) <= 7).length;
-  document.getElementById('statLegit').textContent   = jobs.filter(j => j.ghost_risk === 'low').length;
-  document.getElementById('statMaybe').textContent   = jobs.filter(j => j.ghost_risk === 'medium').length;
-  document.getElementById('statGhost').textContent   = jobs.filter(j => j.ghost_risk === 'high').length;
-  document.getElementById('statRemote').textContent  = jobs.filter(j => j.remote_ok  == 1).length;
-  document.getElementById('statApplied').textContent = jobs.filter(j => j.status === 'applied').length;
+  const j = ALL_JOBS;
+  document.getElementById('sTotal').textContent  = j.length;
+  document.getElementById('s24h').textContent    = j.filter(x=>(x.hours_old??9999)<=24).length;
+  document.getElementById('s7d').textContent     = j.filter(x=>(x.days_old??9999)<=7).length;
+  document.getElementById('sLegit').textContent  = j.filter(x=>x.ghost_risk==='low').length;
+  document.getElementById('sGhost').textContent  = j.filter(x=>x.ghost_risk==='high').length;
+  document.getElementById('sRemote').textContent = j.filter(x=>x.remote_ok==1).length;
 }
 
-// ────────────────────────────────────────────────
-// FILTERS & SORT
-// ────────────────────────────────────────────────
-function setChip(el, group) {
-  document.getElementById(group + 'Chips').querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  filters[group] = el.dataset.val;
+function updateSources() {
+  const counts = {};
+  ALL_JOBS.forEach(j => counts[j.source] = (counts[j.source]||0)+1);
+  const map = {greenhouse:'srcGH',lever:'srcLV',ashby:'srcAB',smartrecruiters:'srcSR',workable:'srcWK',jazz:'srcJZ',workday:'srcWD'};
+  Object.entries(map).forEach(([src, id]) => {
+    document.getElementById(id).textContent = (counts[src]||0) + ' jobs';
+  });
+}
+
+// Persistent applied store: {id: {company, title, url, appliedAt}}
+let appliedMeta = JSON.parse(localStorage.getItem('jr_applied_meta') || '{}');
+
+function saveAppliedMeta() {
+  localStorage.setItem('jr_applied_meta', JSON.stringify(appliedMeta));
+}
+
+function updateApplied() {
+  // Count applied jobs visible in current feed
+  const inFeed = ALL_JOBS.filter(j => appliedSet.has(j.id));
+  // Also count jobs applied but no longer in feed (deleted postings)
+  const allAppliedIds = [...appliedSet];
+  const inFeedIds = new Set(inFeed.map(j => j.id));
+  const deletedApplied = allAppliedIds.filter(id => !inFeedIds.has(id));
+
+  document.getElementById('appliedCount').textContent = allAppliedIds.length;
+
+  // Render applied log (shows all applied, including deleted postings)
+  const log = document.getElementById('appliedLog');
+  if (!log) return;
+  const allItems = [
+    ...inFeed.map(j => ({ id: j.id, company: j.company, title: j.title, url: j.url, active: true })),
+    ...deletedApplied.map(id => {
+      const meta = appliedMeta[id] || {};
+      return { id, company: meta.company || '?', title: meta.title || 'Job removed', url: meta.url || '#', active: false };
+    })
+  ];
+  if (allItems.length === 0) { log.style.display = 'none'; return; }
+  log.style.display = 'block';
+  log.innerHTML = allItems.map(item => `
+    <div style="padding:6px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:6px">
+      <div style="min-width:0">
+        <div style="font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.company}</div>
+        <div style="font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${item.title}</div>
+        ${!item.active ? '<div style="font-size:10px;color:var(--red)">Posting removed</div>' : ''}
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        ${item.url && item.url !== '#' ? `<a href="${item.url}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none">&#8599;</a>` : ''}
+        <button onclick="toggleApplied('${item.id}')" style="font-size:10px;color:var(--red);background:none;border:none;cursor:pointer" title="Remove">&#10005;</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// FILTER TOGGLES
+function toggleFilter(key) {
+  if (['low','medium','high'].includes(key)) {
+    activeFilters[key] = !activeFilters[key];
+    const ids = {low:'tgLow',medium:'tgMed',high:'tgHigh'};
+    const cls = {low:'on-green',medium:'on-yellow',high:'on-red'};
+    document.getElementById(ids[key]).classList.toggle(cls[key], activeFilters[key]);
+  } else if (['greenhouse','lever','ashby','smartrecruiters','workable','jazz','workday'].includes(key)) {
+    activeFilters[key] = !activeFilters[key];
+    const ids = {greenhouse:'tgGH',lever:'tgLV',ashby:'tgAB',smartrecruiters:'tgSR',workable:'tgWK',jazz:'tgJZ',workday:'tgWD'};
+    document.getElementById(ids[key]).classList.toggle('on', activeFilters[key]);
+  } else {
+    // location type toggles handled by toggleWorkType()
+  }
   applyFilters();
 }
 
-function applyFilters() {
-  const search = document.getElementById('searchInput').value.toLowerCase();
-  let rows = ALL_JOBS.filter(j => {
-    if (search && !(
-      (j.company || '').toLowerCase().includes(search) ||
-      (j.title   || '').toLowerCase().includes(search) ||
-      (j.location|| '').toLowerCase().includes(search)
-    )) return false;
+// TIER MANAGER — persisted in localStorage
+const DEFAULT_TIERS = {
+  'OpenAI':0,'Meta':0,'Anthropic':0,'Stripe':0,'Expedia':0,'Cloudflare':0,'Capital One':0,'Visa':0,
+  'Affirm':1,'Zillow':1,'Airbnb':1,'Adyen':1,'NerdWallet':1,'ThePointsGuy':1,'Block':1,'Coinbase':1,
+  'SoFi':1,'Wealthfront':1,'Wise':1,'HubSpot':1,'GitHub':1,'Dropbox':1,'Figma':1,'Miro':1,'Notion':1,
+  'Zapier':1,'Scale AI':1,'Glean':1,'Apollo.io':1,'Bumble':1,'Canva':1,'Realtor.com':1,'Spotify':1,
+  'Pinterest':1,'Marqeta':1,'Bankrate':1,'Reddit':1,'Docker':1,'PayPal':1,'Intuit':1,'Atlassian':1,'Adobe':1,
+  'Toast':2,'SurveyMonkey':2,'Hopper':2,'eBay':2,'Nextdoor':2,'Experian':2
+};
 
-    if (filters.tier  !== 'all' && String(j.tier)       !== filters.tier)  return false;
-    if (filters.legit !== 'all' && j.ghost_risk          !== filters.legit) return false;
-    if (filters.age   !== 'all' && (j.hours_old ?? 99999) > parseInt(filters.age)) return false;
+let tierMap     = JSON.parse(localStorage.getItem('jr_tiers') || 'null') || Object.assign({}, DEFAULT_TIERS);
+let tierVisible = JSON.parse(localStorage.getItem('jr_tier_vis') || 'null') || {0:true, 1:true, 2:true};
+
+function saveTiers() {
+  localStorage.setItem('jr_tiers', JSON.stringify(tierMap));
+  localStorage.setItem('jr_tier_vis', JSON.stringify(tierVisible));
+}
+
+function getJobTier(j) {
+  // Use saved tierMap first, fall back to scraped tier from DB
+  if (tierMap.hasOwnProperty(j.company)) return tierMap[j.company];
+  return j.tier ?? 1;
+}
+
+function renderTierSummary() {
+  const counts = {0:0, 1:0, 2:0};
+  Object.values(tierMap).forEach(t => counts[t] = (counts[t]||0)+1);
+  const labels = {0:'P1 Priority', 1:'P2 Priority', 2:'P3 Priority'};
+  const colors = {0:'var(--accent)', 1:'var(--green)', 2:'var(--muted)'};
+  const pLabels = {0:'Priority 1', 1:'Priority 2', 2:'Priority 3'};
+  document.getElementById('tierSummary').innerHTML = [0,1,2].map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="tier-toggle ${tierVisible[t]?'active':''}" id="tierToggle${t}" onclick="toggleTier(${t})" style="width:28px;height:16px"></button>
+        <span style="font-size:12px;font-weight:500">${pLabels[t]}</span>
+      </div>
+      <span style="font-family:var(--mono);font-size:11px;color:${colors[t]}">${counts[t]} co.</span>
+    </div>
+  `).join('');
+}
+
+function toggleWorkType(key) {
+  // exclusive selection -- clicking active deselects, clicking new one switches
+  if (activeFilters[key]) {
+    activeFilters[key] = false;
+  } else {
+    activeFilters.remote = false;
+    activeFilters.hybrid = false;
+    activeFilters.onsite = false;
+    activeFilters[key] = true;
+  }
+  document.getElementById('tgRemote').classList.toggle('on', activeFilters.remote);
+  document.getElementById('tgHybrid').classList.toggle('on', activeFilters.hybrid);
+  document.getElementById('tgOnsite').classList.toggle('on', activeFilters.onsite);
+  applyFilters();
+}
+
+function toggleTier(t) {
+  tierVisible[t] = !tierVisible[t];
+  saveTiers();
+  renderTierSummary();
+  applyFilters();
+}
+
+function openTierModal() {
+  renderTierTable();
+  document.getElementById('tierModalBg').classList.add('open');
+}
+function closeTierModal() { document.getElementById('tierModalBg').classList.remove('open'); }
+function closeTierOut(e)  { if (e.target.id==='tierModalBg') closeTierModal(); }
+
+function renderTierTable() {
+  const sorted = Object.entries(tierMap).sort((a,b) => a[1]-b[1] || a[0].localeCompare(b[0]));
+  document.getElementById('tierTableBody').innerHTML = sorted.map(([name, tier]) => `
+    <tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:7px 12px;font-size:12px;font-weight:500">${name}</td>
+      <td style="padding:7px 12px">
+        <select onchange="updateCompanyTier('${name}', this.value)" style="width:90px;padding:4px 6px;font-size:11px">
+          <option value="0" ${tier==0?'selected':''}>Priority 1</option>
+          <option value="1" ${tier==1?'selected':''}>Priority 2</option>
+          <option value="2" ${tier==2?'selected':''}>Priority 3</option>
+        </select>
+      </td>
+      <td style="padding:7px 12px">
+        <button onclick="removeCompany('${name}')" style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:13px;padding:0" title="Remove">&#10005;</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function updateCompanyTier(name, tier) {
+  tierMap[name] = parseInt(tier);
+  saveTiers();
+  renderTierSummary();
+  applyFilters();
+}
+
+function removeCompany(name) {
+  delete tierMap[name];
+  saveTiers();
+  renderTierTable();
+  renderTierSummary();
+  applyFilters();
+}
+
+function addTierCompany() {
+  const name = document.getElementById('newCompanyName').value.trim();
+  const tier = parseInt(document.getElementById('newCompanyTier').value);
+  if (!name) return;
+  tierMap[name] = tier;
+  saveTiers();
+  renderTierTable();
+  renderTierSummary();
+  document.getElementById('newCompanyName').value = '';
+  applyFilters();
+}
+
+function resetTiers() {
+  if (!confirm('Reset all tiers to default? This cannot be undone.')) return;
+  tierMap = Object.assign({}, DEFAULT_TIERS);
+  tierVisible = {0:true, 1:true, 2:true};
+  saveTiers();
+  renderTierTable();
+  renderTierSummary();
+  applyFilters();
+}
+
+// SHOW APPLIED ONLY filter
+function filterApplied() {
+  showAppliedOnly = !showAppliedOnly;
+  const btn = document.querySelector('[onclick="filterApplied()"]');
+  if (btn) {
+    btn.textContent = showAppliedOnly ? 'Show All Jobs' : 'Show Applied Only';
+    btn.style.background = showAppliedOnly ? 'var(--green)' : '';
+    btn.style.color = showAppliedOnly ? '#fff' : '';
+    btn.style.borderColor = showAppliedOnly ? 'var(--green)' : '';
+  }
+  applyFilters();
+}
+
+// APPLY FILTERS
+function applyFilters() {
+  const search   = document.getElementById('fSearch').value.toLowerCase();
+  const title    = document.getElementById('fTitle').value.toLowerCase();
+  const company  = document.getElementById('fCompany').value.toLowerCase();
+  const location = document.getElementById('fLocation').value.toLowerCase();
+  const durVal   = parseInt(document.getElementById('fDurVal').value) || null;
+  const durUnit  = document.getElementById('fDurUnit').value;
+  const sortKey  = document.getElementById('sortSelect').value;
+
+  let maxHours = null;
+  if (durVal) {
+    const mult = {hours:1, days:24, weeks:168, months:720};
+    maxHours = durVal * mult[durUnit];
+  }
+
+  const srcActive = activeFilters.greenhouse || activeFilters.lever || activeFilters.ashby || activeFilters.smartrecruiters || activeFilters.workable || activeFilters.jazz || activeFilters.workday;
+  const wrkActive = activeFilters.remote || activeFilters.hybrid || activeFilters.onsite;
+  // work type is now exclusive (only one active at a time)
+
+  let rows = ALL_JOBS.filter(j => {
+    const jobTier = getJobTier(j);
+    if (!tierVisible[jobTier]) return false;
+
+    if (showAppliedOnly && !appliedSet.has(j.id)) return false;
+
+    if (search && ![(j.company||''),(j.title||''),(j.location||''),(j.department||'')].join(' ').toLowerCase().includes(search)) return false;
+    if (title   && !(j.title||'').toLowerCase().includes(title))    return false;
+    if (company && !(j.company||'').toLowerCase().includes(company)) return false;
+    if (location && !(j.location||'').toLowerCase().includes(location)) return false;
+
+    if (maxHours !== null) {
+      const jobHours = j.hours_old ?? (j.days_old != null ? j.days_old * 24 : null);
+      if (jobHours !== null && jobHours > maxHours) return false;
+    }
+
+    if (!activeFilters[j.ghost_risk]) return false;
+
+    if (srcActive && !activeFilters[j.source]) return false;
+
+    if (wrkActive) {
+      const isRemote = j.remote_ok == 1;
+      const isHybrid = !isRemote && j.work_pref === 'hybrid';
+      const isOnsite = !isRemote && !isHybrid;
+      if (activeFilters.remote && isRemote) {}
+      else if (activeFilters.hybrid && isHybrid) {}
+      else if (activeFilters.onsite && isOnsite) {}
+      else return false;
+    }
+
     return true;
   });
 
-  // sort
-  rows = sortRows(rows);
-
-  document.getElementById('resultCount').textContent = rows.length + ' jobs';
-  renderTable(rows);
+  rows = sortRows(rows, sortKey);
+  document.getElementById('resultInfo').textContent = rows.length + ' of ' + ALL_JOBS.length + ' jobs';
+  render(rows);
 }
 
-function sortBy(col) {
-  const ths = document.querySelectorAll('thead th');
-  ths.forEach(th => { th.classList.remove('sorted','asc'); });
-
-  if (sortCol === col) sortAsc = !sortAsc;
-  else { sortCol = col; sortAsc = col === 'hours_old'; }
-
-  const idx = ['hours_old','company','title','location','ghost_risk','salary','applicants','source','match_score'].indexOf(col);
-  if (idx >= 0) {
-    ths[idx].classList.add('sorted');
-    if (!sortAsc) ths[idx].classList.add('asc');
-  }
+// SORT
+function clickSort(col) {
+  document.getElementById('sortSelect').value = col;
   applyFilters();
 }
 
-function sortRows(rows) {
-  return [...rows].sort((a, b) => {
-    let va = a[sortCol], vb = b[sortCol];
-    if (va == null && vb == null) return 0;
-    if (va == null) return 1;
-    if (vb == null) return -1;
-    if (typeof va === 'string') va = va.toLowerCase();
-    if (typeof vb === 'string') vb = vb.toLowerCase();
-    if (va < vb) return sortAsc ? -1 : 1;
-    if (va > vb) return sortAsc ?  1 : -1;
+function sortRows(rows, key) {
+  const asc = key === 'company' || key === 'title' || key === 'location' || key === 'ghost_risk';
+  let realKey = key;
+  if (key === 'days_old_asc') { realKey = 'days_old'; }
+  const dirAsc = key === 'days_old_asc' ? false : asc;
+
+  return [...rows].sort((a,b) => {
+    let va = a[realKey], vb = b[realKey];
+    if (realKey === 'hours_old' || realKey === 'days_old') {
+      va = a.hours_old ?? (a.days_old != null ? a.days_old*24 : 999999);
+      vb = b.hours_old ?? (b.days_old != null ? b.days_old*24 : 999999);
+    }
+    if (va==null && vb==null) return 0;
+    if (va==null) return 1;
+    if (vb==null) return -1;
+    if (typeof va==='string') va=va.toLowerCase();
+    if (typeof vb==='string') vb=vb.toLowerCase();
+    if (va<vb) return dirAsc ? -1 : 1;
+    if (va>vb) return dirAsc ?  1 : -1;
     return 0;
   });
 }
 
-// ────────────────────────────────────────────────
 // RENDER
-// ────────────────────────────────────────────────
-function ageStr(job) {
-  const h = job.hours_old, d = job.days_old;
-  if (h == null && d == null) return '<span class="age-old">unknown</span>';
-  if (h != null && h < 24)   return `<span class="age-fresh">${h}h ago</span>`;
-  if (h != null && h < 48)   return `<span class="age-recent">${h}h ago</span>`;
-  if (d != null && d <= 3)   return `<span class="age-recent">${d}d ago</span>`;
-  return `<span class="age-old">${d ?? Math.round(h/24)}d ago</span>`;
+function ageHTML(j) {
+  const h = j.hours_old, d = j.days_old;
+  const hrs = h ?? (d!=null ? d*24 : null);
+  if (hrs == null) return '<span class="age-old td-age">unknown</span>';
+  if (hrs < 24)   return `<span class="age-fresh td-age">${hrs}h ago</span>`;
+  if (hrs < 48)   return `<span class="age-recent td-age">${hrs}h ago</span>`;
+  const days = d ?? Math.round(hrs/24);
+  const cls = days <= 7 ? 'age-recent' : 'age-old';
+  return `<span class="${cls} td-age">${days}d ago</span>`;
 }
 
-function legitBadge(risk, reason) {
-  const tip = reason ? ` title="${reason}"` : '';
-  if (risk === 'low')    return `<span class="legit-low"${tip}>✅ Legit</span>`;
-  if (risk === 'medium') return `<span class="legit-medium"${tip}>⚠️ Maybe</span>`;
-  return `<span class="legit-high"${tip}>🚫 Ghost</span>`;
+function locationHTML(j) {
+  const loc = j.location || '';
+  let badge = '';
+  if (j.remote_ok == 1) badge = '<span class="loc-badge loc-remote">Remote</span>';
+  else if (j.work_pref === 'hybrid') badge = '<span class="loc-badge loc-hybrid">Hybrid</span>';
+  return `${loc}${badge}`;
 }
 
-function matchCell(score) {
-  if (score == null) return `<span class="match-na">— no API</span>`;
-  const cls = score >= 70 ? '' : score >= 50 ? 'med' : 'low';
-  return `<div class="match-score">
-    <div class="match-bar-wrap"><div class="match-bar ${cls}" style="width:${score}%"></div></div>
-    <span class="match-num">${score}</span>
-  </div>`;
+function legitHTML(j) {
+  const tip = j.ghost_reason ? ` title="${j.ghost_reason}"` : '';
+  if (j.ghost_risk==='low')    return `<span class="legit-badge legit-low"${tip}>Legit</span>`;
+  if (j.ghost_risk==='medium') return `<span class="legit-badge legit-medium"${tip}>Maybe</span>`;
+  return `<span class="legit-badge legit-high"${tip}>Ghost</span>`;
 }
 
-function locationCell(job) {
-  const loc = job.location || '';
-  const badge = job.remote_ok == 1
-    ? '<span class="badge-remote">🌐 Remote</span>'
-    : job.work_pref === 'hybrid'
-      ? '<span class="badge-remote badge-hybrid">🏢 Hybrid</span>'
-      : '';
-  return `<span>${loc}</span>${badge}`;
+function srcHTML(s) {
+  const labels = {greenhouse:'GH', lever:'Lever', ashby:'Ashby', smartrecruiters:'SmartR', workable:'WK', jazz:'Jazz', workday:'WD'};
+  const cls = `src-${s}`;
+  return `<span class="src-badge ${cls}">${labels[s]||s}</span>`;
 }
 
-function sourceBadge(src) {
-  return `<span class="source-badge source-${src}">${src}</span>`;
+function matchHTML(score) {
+  if (score == null) return '<span class="match-na">— no API</span>';
+  const cls = score>=70?'match-hi':score>=50?'match-mid':'match-lo';
+  return `<div class="match-wrap"><div class="match-track"><div class="match-fill ${cls}" style="width:${score}%"></div></div><span class="match-num">${score}</span></div>`;
 }
 
-function salaryCell(salary) {
-  if (!salary) return `<span class="salary-na">—</span>`;
-  return `<span class="salary-val">${salary}</span>`;
-}
-
-function applicantsCell(n) {
-  if (n == null) return `<span class="salary-na">—</span>`;
-  return `<span class="applicants-val">${n.toLocaleString()}</span>`;
-}
-
-function renderTable(rows) {
+function render(rows) {
   const empty = document.getElementById('emptyState');
   const table = document.getElementById('jobTable');
   const tbody = document.getElementById('jobTbody');
 
   if (ALL_JOBS.length === 0) {
-    empty.style.display = 'block';
-    table.style.display = 'none';
-    return;
+    empty.style.display = 'block'; table.style.display = 'none'; return;
   }
+  empty.style.display = 'none'; table.style.display = 'table';
 
-  empty.style.display = 'none';
-  table.style.display = 'table';
-
-  tbody.innerHTML = rows.map(j => `
-    <tr>
-      <td class="td-posted col-posted">${ageStr(j)}<br><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">${j.posted_at || ''}</span></td>
-      <td class="td-company col-company">${j.company}</td>
-      <td class="td-title col-title" title="${j.title}">${j.title}</td>
-      <td class="col-location">${locationCell(j)}</td>
-      <td class="col-legit">${legitBadge(j.ghost_risk, j.ghost_reason)}</td>
-      <td class="col-salary">${salaryCell(j.salary)}</td>
-      <td>${applicantsCell(j.applicants)}</td>
-      <td class="col-source">${sourceBadge(j.source)}</td>
-      <td class="col-match">${matchCell(j.match_score)}</td>
-      <td class="col-apply"><a class="apply-btn" href="${j.url}" target="_blank" title="Open job posting">↗</a></td>
-    </tr>
-  `).join('');
+  tbody.innerHTML = rows.map(j => {
+    const isApplied = appliedSet.has(j.id);
+    const salary = j.salary ? `<span class="salary-val">${j.salary}</span>` : '<span class="na-val">—</span>';
+    const apps   = j.applicants != null ? `<span style="font-family:var(--mono);font-size:11px">${j.applicants.toLocaleString()}</span>` : '<span class="na-val">—</span>';
+    return `<tr id="row-${j.id}">
+      <td class="col-posted">${ageHTML(j)}<div style="font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:1px">${j.posted_at||''}</div></td>
+      <td class="col-company td-company">${j.company}</td>
+      <td class="col-title" title="${j.title}">${j.title}</td>
+      <td class="col-location">${locationHTML(j)}</td>
+      <td class="col-legit">${legitHTML(j)}</td>
+      <td class="col-salary">${salary}</td>
+      <td class="col-apps">${apps}</td>
+      <td class="col-source">${srcHTML(j.source)}</td>
+      <td class="col-match">${matchHTML(j.match_score)}</td>
+      <td class="col-action">
+        <div class="action-wrap">
+          <a class="apply-link" href="${j.url}" target="_blank" title="Open job posting">&#8599;</a>
+          <button class="mark-btn ${isApplied?'applied-row':''}" onclick="toggleApplied('${j.id}')" title="${isApplied?'Mark as not applied':'Mark as applied'}">&#10003;</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
-// ────────────────────────────────────────────────
-// INIT — auto-fetch dashboard_data.json if served
-// ────────────────────────────────────────────────
-document.querySelectorAll('thead th')[0].classList.add('sorted');
-renderTable([]);
-
-async function autoLoad() {
-  // Only attempt fetch when served over http(s) — not file://
-  if (!location.protocol.startsWith('http')) return;
-
-  try {
-    // Cache-bust so GitHub Pages always serves the latest commit
-    const res = await fetch('dashboard_data.json?t=' + Date.now());
-    if (!res.ok) return;  // file doesn't exist yet, show empty state
-
-    const data = await res.json();
-    const jobs = Array.isArray(data) ? data : (data.jobs || []);
-    if (jobs.length === 0) return;
-
-    ingestJobs(jobs);
-
-    // Show last-updated from metadata if present
-    if (data.meta) {
-      const t = data.meta.exported_at || '';
-      const n = data.meta.new_this_run ?? null;
-      const badge = n !== null && n > 0
-        ? ` <span style="color:var(--green);font-family:var(--mono);font-size:11px">(+${n} new)</span>`
-        : '';
-      document.getElementById('lastRun').innerHTML =
-        `<span class="pulse"></span>Updated ${t}${badge}`;
+function toggleApplied(id) {
+  if (appliedSet.has(id)) {
+    appliedSet.delete(id);
+    // keep meta so deleted postings still show in log
+  } else {
+    appliedSet.add(id);
+    // save metadata so we remember this job even if scraper removes it
+    const job = ALL_JOBS.find(j => j.id === id);
+    if (job && !appliedMeta[id]) {
+      appliedMeta[id] = { company: job.company, title: job.title, url: job.url, appliedAt: new Date().toISOString() };
+      saveAppliedMeta();
     }
-  } catch (e) {
-    // Silently fail — user can still use Load Data button
   }
+  saveApplied();
+  updateApplied();
+  const btn = document.querySelector(`#row-${id} .mark-btn`);
+  if (btn) {
+    btn.classList.toggle('applied-row', appliedSet.has(id));
+    btn.title = appliedSet.has(id) ? 'Mark as not applied' : 'Mark as applied';
+  }
+}
+
+// EXPORT CSV
+function exportCSV() {
+  const rows = document.querySelectorAll('#jobTbody tr');
+  if (!rows.length) { alert('No jobs to export'); return; }
+  const headers = ['Company','Title','Location','Posted','Ghost Risk','Salary','Applicants','Source','Match Score','URL','Applied'];
+  const lines   = [headers.join(',')];
+  ALL_JOBS.forEach(j => {
+    const age = j.hours_old != null ? j.hours_old+'h' : (j.days_old+'d');
+    lines.push([j.company,j.title,j.location||'',age,j.ghost_risk,j.salary||'',j.applicants||'',j.source,j.match_score||'',j.url,appliedSet.has(j.id)?'Yes':'No'].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  });
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'jobradar_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+// AUTO-LOAD
+async function autoLoad() {
+  renderTierSummary();
+  if (!location.protocol.startsWith('http')) return;
+  try {
+    const res = await fetch('dashboard_data.json?t=' + Date.now());
+    if (!res.ok) return;
+    ingest(await res.json());
+  } catch(e) {}
 }
 
 autoLoad();

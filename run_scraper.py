@@ -1,27 +1,7 @@
 #!/usr/bin/env python3
-"""
-run_scraper.py -- Main scraper entry point
-----------------------------------------
 
-WHAT THIS FILE DOES:
-  1. Reads your company list from companies.py
-  2. Calls the right API scraper for each company (Greenhouse / Lever / Ashby)
-  3. Saves every job to data/jobs.db (deduplicates -- safe to re-run)
-  4. Logs each run to the scrape_runs table
 
-EXECUTION ORDER:
-  run_scraper.py
-    → imports companies.py      (your company list)
-    → imports scrapers/ats.py   (the actual API calls)
-    → imports db.py             (database connection)
-    → for each company: call scraper → upsert results into DB
 
-USAGE:
-  python run_scraper.py                            # scrape everything
-  python run_scraper.py -k "product manager"       # keyword filter
-  python run_scraper.py -t 1                       # tier 1 only
-  python run_scraper.py -k "PM" -t 1               # combined
-"""
 
 import argparse
 import sys
@@ -31,7 +11,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from companies import SCRAPEABLE, WORKDAY_SKIP
+from companies import SCRAPEABLE, WORKDAY, CUSTOM_SKIP
 from scrapers.ats import scrape_company
 from db import get_conn, init_db
 
@@ -71,11 +51,11 @@ def upsert_job(conn, job: dict) -> bool:
             INSERT INTO jobs (
                 id, source, company, tier, work_pref, title, department,
                 location, remote_ok, url, posted_at, days_old, hours_old,
-                description, ghost_risk, ghost_reason
+                description, salary, ghost_risk, ghost_reason
             ) VALUES (
                 :id, :source, :company, :tier, :work_pref, :title, :department,
                 :location, :remote_ok, :url, :posted_at, :days_old, :hours_old,
-                :description, :ghost_risk, :ghost_reason
+                :description, :salary, :ghost_risk, :ghost_reason
             )
         """, job)
         return True
@@ -113,9 +93,9 @@ def run(keyword: str = None, tier_filter: int = None):
     print(f"\n🚀 JobRadar -- {datetime.now().strftime('%Y-%m-%d %H:%M')}")
     print(f"   Companies: {len(companies)} | Keyword: '{keyword or 'all roles'}'")
 
-    if WORKDAY_SKIP:
-        names = ", ".join(c[0] for c in WORKDAY_SKIP)
-        print(f"   ⏭️  Workday (Phase 2, skipped): {names}")
+    if CUSTOM_SKIP:
+        names = ", ".join(c[0] for c in CUSTOM_SKIP)
+        print(f"   ⏭️  Custom/browser-only (Phase 3): {names}")
     print()
 
     print(f"  {'COMPANY':<18} {'ATS':<12} {'FOUND':>6} {'NEW':>5}  RISK BREAKDOWN")

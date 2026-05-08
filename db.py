@@ -1,14 +1,3 @@
-"""
-db.py -- Database setup
-----------------------
-Single SQLite file. No server. Works on any machine, git-friendly.
-Creates data/jobs.db automatically on first run.
-
-Two tables:
-  jobs        -- every job posting scraped, deduplicated by ATS ID
-  scrape_runs -- log of every scrape run (for history/debugging)
-"""
-
 import sqlite3
 from pathlib import Path
 
@@ -16,39 +5,38 @@ DB_PATH = Path(__file__).parent / "data" / "jobs.db"
 
 
 def get_conn():
-    """Return a database connection. Creates the file + folder if needed."""
     DB_PATH.parent.mkdir(exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row   # lets you access columns by name: row["title"]
+    conn.row_factory = sqlite3.Row
     return conn
 
 
 def init_db():
-    """Create tables if they don't exist. Safe to call multiple times."""
     conn = get_conn()
 
     conn.execute("""
         CREATE TABLE IF NOT EXISTS jobs (
-            id           TEXT PRIMARY KEY,   -- e.g. "gh_7654321" (ATS-native ID)
-            source       TEXT NOT NULL,      -- "greenhouse" | "lever" | "ashby"
+            id           TEXT PRIMARY KEY,
+            source       TEXT NOT NULL,
             company      TEXT NOT NULL,
-            tier         INTEGER NOT NULL,   -- 0 | 1 | 2
-            work_pref    TEXT NOT NULL,      -- "remote" | "hybrid" | "ok"
+            tier         INTEGER NOT NULL,
+            work_pref    TEXT NOT NULL,
             title        TEXT NOT NULL,
             department   TEXT,
             location     TEXT,
-            remote_ok    INTEGER DEFAULT 0, -- 1 = tagged remote in listing
+            remote_ok    INTEGER DEFAULT 0,
             url          TEXT NOT NULL,
-            posted_at    TEXT,              -- "YYYY-MM-DD" string from ATS
-            days_old     INTEGER,           -- integer days since posted_at
-            hours_old    INTEGER,           -- integer hours since posted_at (for fresh filtering)
+            posted_at    TEXT,
+            days_old     INTEGER,
+            hours_old    INTEGER,
             description  TEXT,
-            ghost_risk   TEXT DEFAULT 'low',   -- "low" | "medium" | "high"
+            salary       TEXT,
+            ghost_risk   TEXT DEFAULT 'low',
             ghost_reason TEXT,
             first_seen   TEXT DEFAULT (datetime('now')),
             last_seen    TEXT DEFAULT (datetime('now')),
-            status       TEXT DEFAULT 'new',   -- "new"|"reviewing"|"applied"|"rejected"|"offer"
-            match_score  INTEGER,              -- 0-100, written by match_resume.py
+            status       TEXT DEFAULT 'new',
+            match_score  INTEGER,
             notes        TEXT
         )
     """)
@@ -64,15 +52,19 @@ def init_db():
         )
     """)
 
-    # Migration: add hours_old if upgrading from an older version of the DB
-    try:
-        conn.execute("ALTER TABLE jobs ADD COLUMN hours_old INTEGER")
-    except sqlite3.OperationalError:
-        pass  # column already exists, fine
+    # Migrations -- safe to run on existing DB
+    for col, typedef in [
+        ("hours_old", "INTEGER"),
+        ("salary",    "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE jobs ADD COLUMN {col} {typedef}")
+        except sqlite3.OperationalError:
+            pass
 
     conn.commit()
     conn.close()
-    print(f"✅ Database ready → {DB_PATH}")
+    print(f"OK Database ready at {DB_PATH}")
 
 
 if __name__ == "__main__":
