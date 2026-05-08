@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# The database stays local / in Actions cache — never commit it
+data/jobs.db
+
+# DO commit dashboard_data.json — GitHub Pages needs it
+# !dashboard_data.json  ← already tracked, this line not needed
+
+# Resume files are personal — never commit
+resumes/
+
+# Local exports with custom names
+*.csv
+*_export.json
+
+# macOS
+.DS_Store
