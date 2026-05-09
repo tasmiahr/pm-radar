@@ -58,7 +58,25 @@ def upsert_job(conn, job: dict) -> bool:
                 :location, :remote_ok, :url, :posted_at, :days_old, :hours_old,
                 :description, :salary, :ghost_risk, :ghost_reason
             )
-        """, job)
+        """, {
+            "id":          job.get("id"),
+            "source":      job.get("source"),
+            "company":     job.get("company"),
+            "tier":        job.get("tier", 99),
+            "work_pref":   job.get("work_pref", "unknown"),
+            "title":       job.get("title", ""),
+            "department":  job.get("department", ""),
+            "location":    job.get("location", ""),
+            "remote_ok":   job.get("remote_ok", 0),
+            "url":         job.get("url", ""),
+            "posted_at":   job.get("posted_at"),
+            "days_old":    job.get("days_old"),
+            "hours_old":   job.get("hours_old"),
+            "description": job.get("description", ""),
+            "salary":      job.get("salary"),
+            "ghost_risk":  job.get("ghost_risk", "low"),
+            "ghost_reason":job.get("ghost_reason", ""),
+        })
         return True
 
 
