@@ -1,49 +1,22 @@
-# .github/workflows/scrape.yml
+# .github/workflows/scrape.yml — JobRadar Automated Scraper
 #
-# JobRadar — Automated Scraper + Dashboard Updater
-# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-#
-# WHAT THIS DOES (in order):
-#   1. Checks out your repo
-#   2. Installs Python + dependencies
-#   3. Restores jobs.db from the previous run (cached)
-#   4. Runs run_scraper.py  → updates jobs.db with new jobs
-#   5. Runs export_dashboard.py → writes dashboard_data.json
-#   6. Commits dashboard_data.json back to the repo
-#   7. GitHub Pages serves the updated JSON automatically
-#   8. Runs notify.py → sends email/Discord/Slack if new jobs found
-#
-# SCHEDULE: Every 6 hours on weekdays (adjust cron below)
-#   "0 */6 * * 1-5"  = 00:00, 06:00, 12:00, 18:00 UTC Mon–Fri
-#
-# TO CHANGE FREQUENCY — edit the cron line:
-#   Every 4 hours:  "0 */4 * * 1-5"
-#   Every 12 hours: "0 */12 * * 1-5"
-#   Twice a day:    "0 9,17 * * 1-5"   (9am + 5pm UTC)
-#   Once a day:     "0 9 * * 1-5"      (9am UTC weekdays)
-#
-# REQUIRED SETUP:
-#   1. Repo Settings → Pages → Source: "GitHub Actions"  (or "Deploy from branch: main")
-#   2. Repo Settings → Actions → General → Workflow permissions → "Read and write permissions"
-#
-# OPTIONAL — add any of these to Repo Settings → Secrets → Actions:
-#   NOTIFY_EMAIL_TO        your@email.com
-#   NOTIFY_EMAIL_FROM      your-gmail@gmail.com
-#   NOTIFY_EMAIL_PASS      Gmail App Password
-#   NOTIFY_DISCORD_WEBHOOK https://discord.com/api/webhooks/...
-#   NOTIFY_SLACK_WEBHOOK   https://hooks.slack.com/services/...
-#   DASHBOARD_URL          https://YOUR-USERNAME.github.io/jobradar
-#                          (set this so notification links work correctly)
+# SCHEDULE: Every 6 hours on weekdays
+# REQUIRED: Repo Settings → Actions → General → Read and write permissions
+# OPTIONAL SECRETS:
+#   GEMINI_API_KEY         aistudio.google.com → Get API Key (free)
+#   NOTIFY_EMAIL_TO/FROM/PASS  Gmail notification
+#   NOTIFY_DISCORD_WEBHOOK     Discord notification
+#   DASHBOARD_URL          https://YOUR-USERNAME.netlify.app
 
 name: JobRadar — Scrape & Update Dashboard
 
 on:
   schedule:
-    - cron: "0 */6 * * 1-5"   # every 6 hours, weekdays
-  workflow_dispatch:            # also allows manual trigger from GitHub UI
+    - cron: "0 */6 * * 1-5"   # every 6 hours, Mon-Fri
+  workflow_dispatch:
     inputs:
       keyword:
-        description: 'Keyword filter (e.g. "product manager")'
+        description: 'Keyword to search (e.g. "product manager")'
         required: false
         default: "product manager"
 
@@ -51,17 +24,17 @@ jobs:
   scrape:
     name: Scrape → Export → Commit → Notify
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
 
-      # ── 1. Checkout ────────────────────────────────────────────
+      # 1. Checkout — jobs.db comes from repo (committed each run)
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # ── 2. Python setup ────────────────────────────────────────
+      # 2. Python
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
@@ -70,65 +43,58 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # ── 3. Restore DB from cache ───────────────────────────────
-      # This preserves your job history between runs.
-      # Without this, the DB resets every run and everything looks "new".
-      - name: Restore jobs database cache
-        uses: actions/cache@v4
-        with:
-          path: data/jobs.db
-          key: jobradar-db-${{ github.ref_name }}
-          restore-keys: |
-            jobradar-db-
+      # 3. Ensure data directory + log DB status
+      - name: Prepare database
+        run: |
+          mkdir -p data
+          if [ -f data/jobs.db ]; then
+            echo "jobs.db found: $(du -sh data/jobs.db | cut -f1)"
+          else
+            echo "No jobs.db yet — will be created fresh"
+          fi
 
-      - name: Create data directory
-        run: mkdir -p data
-
-      # ── 4. Run scraper ─────────────────────────────────────────
+      # 4. Scrape watchlist + global search
       - name: Scrape job listings
         run: |
           KEYWORD="${{ github.event.inputs.keyword || 'product manager' }}"
-          echo "🔍 Scraping with keyword: $KEYWORD"
-          python run_scraper.py --keyword "$KEYWORD"
+          echo "Keyword: $KEYWORD"
+          python run_scraper.py --keyword "$KEYWORD" --global
 
-      # ── 5. Export to JSON ──────────────────────────────────────
+      # 5. Auto-match against resume (skips if no GEMINI_API_KEY or resume)
+      - name: Score jobs against resume
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python auto_match.py --limit 80
+
+      # 6. Export to JSON for dashboard
       - name: Export dashboard data
         run: python export_dashboard.py
 
-      # ── 6. Capture new job count for notification ──────────────
-      - name: Read new job count
+      # 7. Read counts
+      - name: Read job counts
         id: jobcount
         run: |
-          # Pull new_this_run from the JSON metadata
-          NEW=$(python -c "
-          import json
-          d = json.load(open('dashboard_data.json'))
-          print(d.get('meta', {}).get('new_this_run', 0))
-          ")
-          TOTAL=$(python -c "
-          import json
-          d = json.load(open('dashboard_data.json'))
-          print(d.get('meta', {}).get('total', 0))
-          ")
-          echo "new=$NEW"   >> $GITHUB_OUTPUT
+          NEW=$(python -c "import json; d=json.load(open('dashboard_data.json')); print(d.get('meta',{}).get('new_this_run',0))")
+          TOTAL=$(python -c "import json; d=json.load(open('dashboard_data.json')); print(d.get('meta',{}).get('total',0))")
+          echo "new=$NEW" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
-          echo "📊 New: $NEW | Total: $TOTAL"
+          echo "New: $NEW | Total: $TOTAL"
 
-      # ── 7. Commit dashboard_data.json back to repo ─────────────
-      - name: Commit updated dashboard data
+      # 8. Commit jobs.db + dashboard_data.json back to repo
+      - name: Commit updated data
         run: |
           git config user.name  "JobRadar Bot"
           git config user.email "jobradar-bot@users.noreply.github.com"
-          git add dashboard_data.json
+          git add dashboard_data.json data/jobs.db
           if git diff --staged --quiet; then
-            echo "No changes to commit (no new jobs)"
+            echo "No changes to commit"
           else
             git commit -m "🤖 JobRadar: +${{ steps.jobcount.outputs.new }} new jobs [$(date -u +'%Y-%m-%d %H:%M UTC')]"
             git push
           fi
 
-      # ── 8. Send notifications ──────────────────────────────────
-      - name: Send new-job notifications
+      # 9. Notify if new jobs found
+      - name: Send notifications
         if: steps.jobcount.outputs.new != '0'
         env:
           NOTIFY_EMAIL_TO:        ${{ secrets.NOTIFY_EMAIL_TO }}
@@ -143,11 +109,10 @@ jobs:
             --total ${{ steps.jobcount.outputs.total }} \
             --dashboard-url "$DASHBOARD_URL"
 
-      # ── 9. Summary ─────────────────────────────────────────────
+      # 10. Summary
       - name: Print run summary
         run: |
           echo "## 📡 JobRadar Run Complete" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| New jobs found | ${{ steps.jobcount.outputs.new }} |" >> $GITHUB_STEP_SUMMARY
