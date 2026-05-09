@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from companies import SCRAPEABLE, WORKDAY, CUSTOM_SKIP
 from scrapers.ats import scrape_company
+from scrapers.global_search import search_all_platforms
 from db import get_conn, init_db
 
 
@@ -75,7 +76,7 @@ def keyword_match(job: dict, keyword: str) -> bool:
 # MAIN RUN FUNCTION
 # -----------------------------------------------------------------
 
-def run(keyword: str = None, tier_filter: int = None):
+def run(keyword: str = None, tier_filter: int = None, global_search: bool = False):
     init_db()
     conn = get_conn()
 
@@ -130,6 +131,31 @@ def run(keyword: str = None, tier_filter: int = None):
 
         time.sleep(0.35)  # be polite to the APIs
 
+    # ── GLOBAL SEARCH (all companies on each ATS platform) ──────────
+    if global_search and keyword:
+        print(f"\n  🌐 Global ATS search for '{keyword}' across all platforms...")
+        print(f"  {'-'*60}")
+        try:
+            global_jobs = search_all_platforms(
+                keyword=keyword,
+                max_per_platform=300,
+            )
+            global_new = 0
+            for job in global_jobs:
+                is_new = upsert_job(conn, job)
+                if is_new:
+                    global_new += 1
+            conn.commit()
+            total_found += len(global_jobs)
+            total_new   += global_new
+            print(f"\n  🌐 Global search: {len(global_jobs)} jobs found, {global_new} new")
+        except Exception as e:
+            errors.append(f"Global search: {e}")
+            print(f"  ❌ Global search error: {e}")
+    elif global_search and not keyword:
+        print("\n  ⚠️  --global requires --keyword to avoid pulling millions of jobs")
+        print("      Example: python run_scraper.py --global -k 'product manager'")
+
     elapsed = time.time() - start
 
     # Log this run
@@ -169,5 +195,11 @@ if __name__ == "__main__":
         type=int, choices=[0, 1, 2],
         help="Only scrape one tier (0=hybrid, 1=remote, 2=ok)"
     )
+    parser.add_argument(
+        "--global", "-g",
+        dest="global_search",
+        action="store_true",
+        help="Also search ALL companies on Greenhouse/SmartRecruiters/Workable (requires --keyword)"
+    )
     args = parser.parse_args()
-    run(keyword=args.keyword, tier_filter=args.tier)
+    run(keyword=args.keyword, tier_filter=args.tier, global_search=args.global_search)

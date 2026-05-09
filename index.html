@@ -4,32 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JobRadar</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:         #f5f4f1;
+  --bg:         #f6f8fb;
   --surface:    #ffffff;
-  --surface2:   #f9f8f6;
-  --border:     #e8e6e1;
-  --border2:    #d4d0c8;
-  --text:       #1a1916;
-  --muted:      #8a8680;
-  --muted2:     #b5b1a8;
-  --accent:     #2563eb;
-  --accent-bg:  #eff4ff;
-  --green:      #16a34a;
-  --green-bg:   #f0fdf4;
-  --yellow:     #b45309;
+  --surface2:   #f6f8fb;
+  --border:     #e3e8ef;
+  --border2:    #cdd5e0;
+  --text:       #0d1117;
+  --muted:      #64748b;
+  --muted2:     #94a3b8;
+  --accent:     #635bff;
+  --accent2:    #0070f3;
+  --accent-bg:  #f0f0ff;
+  --green:      #059669;
+  --green-bg:   #ecfdf5;
+  --yellow:     #d97706;
   --yellow-bg:  #fffbeb;
-  --red:        #dc2626;
-  --red-bg:     #fef2f2;
-  --sans:       'DM Sans', sans-serif;
-  --mono:       'DM Mono', monospace;
+  --red:        #e11d48;
+  --red-bg:     #fff1f2;
+  --sans:       'Inter', system-ui, -apple-system, sans-serif;
+  --mono:       'IBM Plex Mono', monospace;
   --radius:     8px;
-  --shadow:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md:  0 4px 12px rgba(0,0,0,0.08);
+  --radius-lg:  12px;
+  --shadow:     0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
 }
 
 body {
@@ -39,17 +41,19 @@ body {
   font-size: 13px;
   line-height: 1.5;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* HEADER */
 header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, #0d1117 0%, #1a1f35 50%, #0f1923 100%);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
   padding: 0 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: 56px;
+  height: 58px;
   position: sticky;
   top: 0;
   z-index: 200;
@@ -63,24 +67,30 @@ header {
 
 .logo-mark {
   width: 30px; height: 30px;
-  background: var(--text);
-  border-radius: 7px;
+  background: linear-gradient(135deg, #635bff, #0070f3);
+  border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(99,91,255,0.4);
 }
 
 .logo-name {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text);
+  color: #ffffff;
+  font-family: var(--sans);
 }
 
 .logo-tag {
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
   font-weight: 400;
+  font-family: var(--sans);
+  letter-spacing: 0;
 }
 
 .header-right {
@@ -93,19 +103,20 @@ header {
   display: flex;
   align-items: center;
   gap: 6px;
-  background: var(--green-bg);
-  border: 1px solid #bbf7d0;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   font-size: 11px;
-  color: var(--green);
-  font-family: var(--mono);
+  color: rgba(255,255,255,0.65);
+  font-family: var(--sans);
+  font-weight: 400;
 }
 
 .dot {
   width: 6px; height: 6px;
   border-radius: 50%;
-  background: var(--green);
+  background: #34d399;
   animation: blink 2s infinite;
 }
 
@@ -122,42 +133,44 @@ header {
   background: var(--surface);
   color: var(--text);
   transition: all 0.15s;
+  letter-spacing: -0.01em;
 }
-.btn:hover { background: var(--surface2); border-color: var(--border2); }
-.btn-primary { background: var(--text); color: #fff; border-color: var(--text); }
-.btn-primary:hover { background: #333; border-color: #333; }
+.btn:hover { background: var(--surface2); border-color: var(--border); }
+.btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 1px 4px rgba(99,91,255,0.3); }
+.btn-primary:hover { background: #4f46e5; border-color: #4f46e5; }
 
 /* MAIN LAYOUT */
 .layout {
   display: flex;
-  min-height: calc(100vh - 56px);
+  min-height: calc(100vh - 58px);
 }
 
 /* SIDEBAR */
 .sidebar {
-  width: 260px;
+  width: 256px;
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 22px;
   overflow-y: auto;
-  max-height: calc(100vh - 56px);
+  max-height: calc(100vh - 58px);
   position: sticky;
-  top: 56px;
+  top: 58px;
 }
 
 .sidebar-section { display: flex; flex-direction: column; gap: 8px; }
 
 .sidebar-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding: 0 4px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+  padding: 0 2px;
+  font-family: var(--sans);
 }
 
 .filter-input-wrap { position: relative; }
@@ -172,13 +185,13 @@ header {
 
 input[type=text], select, input[type=number] {
   width: 100%;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
   color: var(--text);
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 13px;
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 7px 10px;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
   appearance: none;
@@ -186,10 +199,57 @@ input[type=text], select, input[type=number] {
 
 input[type=text]:focus, select:focus, input[type=number]:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(37,99,235,0.08);
+  box-shadow: 0 0 0 3px rgba(99,91,255,0.12);
 }
 
 .filter-input-wrap input { padding-left: 30px; }
+
+/* Location multi-tag */
+.loc-tag-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 0;
+}
+.loc-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--accent-bg);
+  border: 1.5px solid #c7d2fe;
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  max-width: 100%;
+}
+.loc-tag button {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.6;
+}
+.loc-tag button:hover { opacity: 1; }
+.loc-suggestions {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  margin-top: 2px;
+}
+.loc-suggestion-item {
+  padding: 7px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.loc-suggestion-item:hover { background: var(--accent-bg); color: var(--accent); }
 
 select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8680' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -222,18 +282,20 @@ select {
   padding: 6px 0;
   text-align: center;
   border-radius: 6px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: transparent;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
+  font-family: var(--sans);
   cursor: pointer;
   transition: all 0.12s;
+  letter-spacing: -0.01em;
 }
-.toggle:hover { border-color: var(--accent); color: var(--accent); }
-.toggle.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+.toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.toggle.on { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 3px rgba(99,91,255,0.3); }
 .toggle.on-green { background: var(--green); border-color: var(--green); color: #fff; }
-.toggle.on-yellow { background: #d97706; border-color: #d97706; color: #fff; }
+.toggle.on-yellow { background: var(--yellow); border-color: var(--yellow); color: #fff; }
 .toggle.on-red { background: var(--red); border-color: var(--red); color: #fff; }
 
 /* Tier config section */
@@ -261,7 +323,7 @@ select {
   border: none;
   flex-shrink: 0;
 }
-.tier-toggle.active { background: var(--accent); }
+.tier-toggle.active { background: var(--accent); box-shadow: 0 1px 3px rgba(99,91,255,0.4); }
 .tier-toggle::after {
   content: '';
   position: absolute;
@@ -281,8 +343,9 @@ select {
   align-items: center;
   justify-content: space-between;
   padding: 5px 8px;
-  border-radius: 5px;
+  border-radius: 6px;
   background: var(--surface2);
+  border: 1px solid var(--border);
 }
 
 .source-name {
@@ -306,19 +369,20 @@ select {
 
 /* Applied counter */
 .applied-section {
-  background: var(--accent-bg);
-  border: 1px solid #bfdbfe;
-  border-radius: var(--radius);
-  padding: 12px;
+  background: linear-gradient(135deg, var(--accent-bg), #f0f8ff);
+  border: 1.5px solid #c7d2fe;
+  border-radius: var(--radius-lg);
+  padding: 14px;
   text-align: center;
 }
 
 .applied-num {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--accent);
-  font-family: var(--mono);
+  font-family: var(--sans);
   line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .applied-label { font-size: 11px; color: var(--muted); margin-top: 3px; }
@@ -330,8 +394,8 @@ select {
 /* STATS */
 .stats-row {
   display: flex;
-  gap: 1px;
-  background: var(--border);
+  gap: 0;
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 
@@ -339,21 +403,27 @@ select {
   flex: 1;
   background: var(--surface);
   padding: 14px 20px;
+  border-right: 1px solid var(--border);
 }
+.stat:last-child { border-right: none; }
 
 .stat-num {
   font-size: 24px;
-  font-weight: 600;
-  font-family: var(--mono);
+  font-weight: 700;
+  font-family: var(--sans);
   color: var(--text);
   line-height: 1;
+  letter-spacing: -0.03em;
 }
 
 .stat-lbl {
   font-size: 11px;
+  font-family: var(--sans);
   color: var(--muted);
+  font-weight: 400;
   margin-top: 3px;
   white-space: nowrap;
+  letter-spacing: 0;
 }
 
 .stat-num.blue   { color: var(--accent); }
@@ -361,14 +431,182 @@ select {
 .stat-num.yellow { color: var(--yellow); }
 .stat-num.red    { color: var(--red); }
 
+/* TABS */
+.tab-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+}
+.tab-nav-btn {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.tab-nav-btn:hover { color: var(--text); }
+.tab-nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+.tab-badge.green { background: var(--green-bg); color: var(--green); }
+.tab-pane-main { display: none; flex: 1; flex-direction: column; min-width: 0; }
+.tab-pane-main.active { display: flex; }
+
+/* Applied tab */
+.applied-table-wrap { overflow-x: auto; flex: 1; }
+.applied-status-select {
+  padding: 3px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-family: var(--sans);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* Resume matcher tab */
+.resume-tab-content {
+  padding: 24px;
+  max-width: 760px;
+}
+.resume-tab-content h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+.resume-tab-content p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.form-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+textarea.form-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 10px;
+  resize: vertical;
+  outline: none;
+  line-height: 1.6;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+textarea.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,91,255,0.1);
+}
+.match-result-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-top: 20px;
+}
+.match-score-big {
+  font-size: 52px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.match-verdict-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.verdict-strong { background: #ecfdf5; color: #059669; }
+.verdict-apply  { background: var(--accent-bg); color: var(--accent); }
+.verdict-caution{ background: #fffbeb; color: #d97706; }
+.verdict-skip   { background: #fff1f2; color: #e11d48; }
+.match-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 16px 0 8px;
+}
+.match-item {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.match-item:last-child { border-bottom: none; }
+.match-severity {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  height: fit-content;
+  margin-top: 1px;
+}
+.sev-critical { background: #fff1f2; color: #e11d48; }
+.sev-moderate { background: #fffbeb; color: #d97706; }
+.sev-minor    { background: #ecfdf5; color: #059669; }
+.spinner {
+  display: inline-block;
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* TOOLBAR */
 .toolbar {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1.5px solid var(--border);
   flex-wrap: wrap;
 }
 
@@ -418,26 +656,27 @@ table {
 }
 
 thead th {
-  background: var(--surface2);
-  padding: 10px 14px;
+  background: var(--text);
+  padding: 9px 14px;
   text-align: left;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--muted);
-  border-bottom: 1px solid var(--border);
+  color: #c8bfb0;
+  border-bottom: none;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   position: sticky;
-  top: 56px;
+  top: 58px;
+  font-family: var(--mono);
 }
 
 thead th:hover { color: var(--text); }
 thead th.sorted { color: var(--accent); }
-thead th.sorted::after { content: ' \2193'; font-size: 10px; }
-thead th.sorted.asc::after { content: ' \2191'; font-size: 10px; }
+thead th.sorted::after { content: ' \2193'; font-size: 9px; }
+thead th.sorted.asc::after { content: ' \2191'; font-size: 9px; }
 
 tbody tr {
   border-bottom: 1px solid var(--border);
@@ -445,10 +684,10 @@ tbody tr {
   transition: background 0.1s;
 }
 
-tbody tr:hover { background: #faf9f7; }
+tbody tr:hover { background: #f8faff; }
 
 tbody td {
-  padding: 11px 14px;
+  padding: 10px 14px;
   vertical-align: middle;
   max-width: 0;
   overflow: hidden;
@@ -477,7 +716,7 @@ tbody td {
 .age-recent { color: var(--yellow); }
 .age-old    { color: var(--muted); }
 
-.td-company { font-weight: 600; font-size: 12px; }
+.td-company { font-weight: 600; font-size: 13px; letter-spacing: -0.01em; }
 
 .loc-badge {
   display: inline-block;
@@ -488,8 +727,8 @@ tbody td {
   font-weight: 500;
   vertical-align: middle;
 }
-.loc-remote { background: var(--accent-bg); color: var(--accent); }
-.loc-hybrid { background: #f3f0ff; color: #7c3aed; }
+.loc-remote { background: var(--accent-bg); color: var(--accent); border-radius: 3px; }
+.loc-hybrid { background: #f3f0ff; color: #7c3aed; border-radius: 3px; }
 
 .legit-badge {
   display: inline-flex;
@@ -501,9 +740,9 @@ tbody td {
   border-radius: 4px;
   cursor: help;
 }
-.legit-low    { background: var(--green-bg);  color: var(--green);  border: 1px solid #bbf7d0; }
-.legit-medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid #fde68a; }
-.legit-high   { background: var(--red-bg);    color: var(--red);    border: 1px solid #fecaca; }
+.legit-low    { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.legit-medium { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+.legit-high   { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
 
 .src-badge {
   font-size: 10px;
@@ -521,13 +760,13 @@ tbody td {
 .src-jazz           { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
 .src-workday        { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
 
-.salary-val { font-family: var(--mono); font-size: 11px; color: var(--green); }
+.salary-val { font-family: var(--mono); font-size: 11px; color: #059669; font-weight: 500; }
 .na-val     { color: var(--muted2); }
 
 .match-wrap { display: flex; align-items: center; gap: 5px; }
 .match-track { width: 32px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
 .match-fill  { height: 100%; border-radius: 2px; }
-.match-hi    { background: var(--green); }
+.match-hi    { background: #059669; }
 .match-mid   { background: #f59e0b; }
 .match-lo    { background: var(--red); }
 .match-num   { font-family: var(--mono); font-size: 11px; color: var(--muted); }
@@ -546,7 +785,7 @@ tbody td {
   font-size: 12px;
   transition: all 0.12s;
 }
-.apply-link:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+.apply-link:hover { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 1px 4px rgba(99,91,255,0.3); }
 
 .mark-btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -559,18 +798,18 @@ tbody td {
   cursor: pointer;
   transition: all 0.12s;
 }
-.mark-btn:hover { background: var(--green-bg); border-color: #bbf7d0; color: var(--green); }
-.mark-btn.applied-row { background: var(--green-bg); border-color: #bbf7d0; color: var(--green); }
+.mark-btn:hover { background: var(--green-bg); border-color: #6ee7b7; color: var(--green); }
+.mark-btn.applied-row { background: var(--green); border-color: var(--green); color: #fff; }
 
 /* EMPTY STATE */
 .empty-state {
-  padding: 80px 40px;
+  padding: 100px 40px;
   text-align: center;
   color: var(--muted);
 }
-.empty-icon { font-size: 40px; margin-bottom: 16px; }
-.empty-state h3 { font-size: 16px; color: var(--text); margin-bottom: 8px; font-weight: 600; }
-.empty-state p  { font-size: 13px; line-height: 1.6; max-width: 400px; margin: 0 auto; }
+.empty-icon { font-size: 36px; margin-bottom: 20px; opacity: 0.5; }
+.empty-state h3 { font-size: 17px; color: var(--text); margin-bottom: 8px; font-weight: 600; font-family: var(--sans);  }
+.empty-state p  { font-size: 13px; line-height: 1.6; max-width: 400px; margin: 0 auto; color: var(--muted); }
 
 /* MODAL */
 .modal-bg {
@@ -583,11 +822,11 @@ tbody td {
 
 .modal {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
   padding: 28px;
-  width: 480px;
+  width: 500px;
   max-width: calc(100vw - 32px);
   margin: 16px;
 }
@@ -642,7 +881,7 @@ textarea:focus { border-color: var(--accent); }
 
 <header>
   <div class="logo">
-    <div class="logo-mark">&#128225;</div>
+    <div class="logo-mark">&#9685;</div>
     <div>
       <div class="logo-name">JobRadar <span class="logo-tag">/ pipeline</span></div>
     </div>
@@ -690,11 +929,13 @@ textarea:focus { border-color: var(--accent); }
 
     <div class="sidebar-section">
       <div class="sidebar-title">Location</div>
-      <div class="filter-input-wrap" style="margin-bottom:6px">
+      <div class="loc-tag-wrap" id="locTagWrap"></div>
+      <div class="filter-input-wrap">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-        <input type="text" id="fLocation" placeholder="City, state, or country..." oninput="applyFilters()">
+        <input type="text" id="fLocation" placeholder="Add city, state, country..." onkeydown="handleLocKey(event)" oninput="showLocSuggestions(this.value)">
       </div>
-      <div class="toggle-group">
+      <div id="locSuggestions" class="loc-suggestions" style="display:none"></div>
+      <div class="toggle-group" style="margin-top:4px">
         <button class="toggle" id="tgRemote" onclick="toggleWorkType('remote')">Remote</button>
         <button class="toggle" id="tgHybrid" onclick="toggleWorkType('hybrid')">Hybrid</button>
         <button class="toggle" id="tgOnsite" onclick="toggleWorkType('onsite')">On-site</button>
@@ -783,19 +1024,14 @@ textarea:focus { border-color: var(--accent); }
       </div>
     </div>
 
-    <!-- APPLIED -->
+    <!-- APPLIED MINI STAT in sidebar -->
     <div class="sidebar-section">
       <div class="sidebar-title">Applications</div>
       <div class="applied-section">
         <div class="applied-num" id="appliedCount">0</div>
         <div class="applied-label">Jobs Applied</div>
-        <div class="applied-hint">
-          Click the <strong style="color:var(--green)">&#10003;</strong> button on any row to mark it applied. It turns green. Click again to undo.<br><br>
-          Saved by job ID in your browser. If the posting disappears from the scraper (company closed it), your applied record stays &mdash; you can still see it in the Applied log below.
-        </div>
       </div>
-      <button class="btn" style="width:100%;font-size:11px;margin-top:4px" onclick="filterApplied()">Show Applied Only</button>
-      <div id="appliedLog" style="margin-top:8px;display:none;max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;padding:4px 0"></div>
+      <button class="btn btn-primary" style="width:100%;font-size:12px;margin-top:6px" onclick="switchMainTab('applied')">View Applications &#8594;</button>
     </div>
 
   </aside>
@@ -803,7 +1039,7 @@ textarea:focus { border-color: var(--accent); }
   <!-- MAIN -->
   <div class="main">
 
-    <!-- STATS -->
+    <!-- STATS ROW -->
     <div class="stats-row">
       <div class="stat">
         <div class="stat-num blue" id="sTotal">—</div>
@@ -822,55 +1058,134 @@ textarea:focus { border-color: var(--accent); }
         <div class="stat-lbl">Legit</div>
       </div>
       <div class="stat">
-        <div class="stat-num red" id="sGhost">—</div>
-        <div class="stat-lbl">Ghost</div>
-      </div>
-      <div class="stat">
         <div class="stat-num blue" id="sRemote">—</div>
         <div class="stat-lbl">Remote</div>
       </div>
-    </div>
-
-    <!-- TOOLBAR -->
-    <div class="toolbar">
-      <span class="sort-label">Sort by</span>
-      <select id="sortSelect" onchange="applyFilters()" style="width:auto;min-width:140px;background:var(--surface2)">
-        <option value="hours_old">Most Recent First</option>
-        <option value="days_old_asc">Oldest First</option>
-        <option value="company">Company A-Z</option>
-        <option value="title">Title A-Z</option>
-        <option value="match_score">Match Score</option>
-        <option value="ghost_risk">Legitimacy</option>
-      </select>
-      <div class="toolbar-sep"></div>
-      <span class="result-info" id="resultInfo">— jobs</span>
-      <button class="btn" onclick="exportCSV()" style="margin-left:4px;font-size:11px;padding:6px 10px">Export CSV</button>
-    </div>
-
-    <!-- TABLE -->
-    <div class="table-wrap">
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">&#128225;</div>
-        <h3>No data loaded</h3>
-        <p>Click <strong>Load Data</strong> to import your job listings, or wait for the auto-refresh if you're on the live URL.</p>
+      <div class="stat">
+        <div class="stat-num" id="sAppliedStat">0</div>
+        <div class="stat-lbl">Applied</div>
       </div>
-      <table id="jobTable" style="display:none">
-        <thead>
-          <tr>
-            <th class="col-posted sorted" onclick="clickSort('hours_old')">Posted</th>
-            <th class="col-company" onclick="clickSort('company')">Company</th>
-            <th class="col-title" onclick="clickSort('title')">Job Title</th>
-            <th class="col-location" onclick="clickSort('location')">Location</th>
-            <th class="col-legit" onclick="clickSort('ghost_risk')">Legit?</th>
-            <th class="col-salary" onclick="clickSort('salary')">Salary</th>
-            <th class="col-apps" onclick="clickSort('applicants')">Applicants</th>
-            <th class="col-source" onclick="clickSort('source')">Source</th>
-            <th class="col-match" onclick="clickSort('match_score')">Match</th>
-            <th class="col-action">Apply</th>
-          </tr>
-        </thead>
-        <tbody id="jobTbody"></tbody>
-      </table>
+    </div>
+
+    <!-- TAB NAV -->
+    <nav class="tab-nav">
+      <button class="tab-nav-btn active" id="tab-btn-jobs" onclick="switchMainTab('jobs')">
+        Jobs <span class="tab-badge" id="tabBadgeJobs">—</span>
+      </button>
+      <button class="tab-nav-btn" id="tab-btn-applied" onclick="switchMainTab('applied')">
+        Applied <span class="tab-badge green" id="tabBadgeApplied">0</span>
+      </button>
+      <button class="tab-nav-btn" id="tab-btn-match" onclick="switchMainTab('match')">
+        Resume Match
+      </button>
+    </nav>
+
+    <!-- TAB: JOBS -->
+    <div class="tab-pane-main active" id="tabpane-jobs">
+      <div class="toolbar">
+        <span class="sort-label">Sort by</span>
+        <select id="sortSelect" onchange="applyFilters()" style="width:auto;min-width:140px;background:var(--surface2)">
+          <option value="hours_old">Most Recent First</option>
+          <option value="days_old_asc">Oldest First</option>
+          <option value="company">Company A-Z</option>
+          <option value="title">Title A-Z</option>
+          <option value="match_score">Match Score</option>
+          <option value="ghost_risk">Legitimacy</option>
+        </select>
+        <div class="toolbar-sep"></div>
+        <span class="result-info" id="resultInfo">— jobs</span>
+        <button class="btn" onclick="exportCSV()" style="margin-left:4px;font-size:11px;padding:6px 10px">Export CSV</button>
+      </div>
+      <div class="table-wrap">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">&#128225;</div>
+          <h3>No data loaded</h3>
+          <p>Click <strong>Load Data</strong> to import your job listings, or wait for the auto-refresh if you're on the live URL.</p>
+        </div>
+        <table id="jobTable" style="display:none">
+          <thead>
+            <tr>
+              <th class="col-posted sorted" onclick="clickSort('hours_old')">Posted</th>
+              <th class="col-company" onclick="clickSort('company')">Company</th>
+              <th class="col-title" onclick="clickSort('title')">Job Title</th>
+              <th class="col-location" onclick="clickSort('location')">Location</th>
+              <th class="col-legit" onclick="clickSort('ghost_risk')">Legit?</th>
+              <th class="col-salary" onclick="clickSort('salary')">Salary</th>
+              <th class="col-apps" onclick="clickSort('applicants')">Applicants</th>
+              <th class="col-source" onclick="clickSort('source')">Source</th>
+              <th class="col-match" onclick="clickSort('match_score')">Match</th>
+              <th class="col-action">Apply</th>
+            </tr>
+          </thead>
+          <tbody id="jobTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: APPLIED -->
+    <div class="tab-pane-main" id="tabpane-applied">
+      <div class="toolbar">
+        <span class="sort-label">Applications tracker</span>
+        <div class="toolbar-sep"></div>
+        <span class="result-info" id="appliedInfo">0 applications</span>
+        <button class="btn" onclick="exportAppliedCSV()" style="margin-left:4px;font-size:11px;padding:6px 10px">Export CSV</button>
+      </div>
+      <div class="applied-table-wrap">
+        <div class="empty-state" id="appliedEmptyState">
+          <div class="empty-icon">&#9989;</div>
+          <h3>No applications yet</h3>
+          <p>Click the <strong>&#10003;</strong> button on any job to mark it as applied. It will appear here.</p>
+        </div>
+        <table id="appliedTable" style="display:none">
+          <thead>
+            <tr>
+              <th onclick="sortApplied('appliedAt')">Applied On</th>
+              <th onclick="sortApplied('company')">Company</th>
+              <th onclick="sortApplied('title')">Job Title</th>
+              <th>Status</th>
+              <th>Notes</th>
+              <th>Link</th>
+              <th>Remove</th>
+            </tr>
+          </thead>
+          <tbody id="appliedTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: RESUME MATCH -->
+    <div class="tab-pane-main" id="tabpane-match">
+      <div class="resume-tab-content">
+        <h2>Resume Match</h2>
+        <p>Paste a job description and your resume to get an AI match score, gap analysis, and tailored bullet suggestions. Requires an Anthropic API key.</p>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+          <div>
+            <label class="form-label">Job Description</label>
+            <textarea class="form-input" id="matchJD" rows="12" placeholder="Paste the full job description here..."></textarea>
+          </div>
+          <div>
+            <label class="form-label">Your Resume</label>
+            <textarea class="form-input" id="matchResume" rows="12" placeholder="Paste your resume as plain text here..."></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px">
+          <div style="flex:1">
+            <label class="form-label">Anthropic API Key</label>
+            <input type="password" id="matchApiKey" placeholder="sk-ant-..." style="font-family:var(--mono);font-size:12px"
+              oninput="localStorage.setItem('jr_api_key', this.value)">
+            <div class="form-hint">Stored in your browser only. Never sent anywhere except Anthropic's API.</div>
+          </div>
+          <div style="padding-top:18px">
+            <button class="btn btn-primary" id="matchBtn" onclick="runMatch()" style="padding:10px 20px;font-size:13px">
+              Analyze Match
+            </button>
+          </div>
+        </div>
+
+        <div id="matchResult" style="display:none"></div>
+      </div>
     </div>
 
   </div>
@@ -914,7 +1229,7 @@ textarea:focus { border-color: var(--accent); }
 <!-- TIER MANAGER MODAL -->
 <div class="modal-bg" id="tierModalBg" onclick="closeTierOut(event)">
   <div class="modal" style="max-width:560px">
-    <h2>Manage Company Tiers</h2>
+    <h2>Company Priorities</h2>
     <p>Define which tier each company belongs to. Tier controls which jobs show when you filter. Changes save instantly to your browser.</p>
     <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
       <div style="flex:1;min-width:120px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-size:11px">
@@ -964,6 +1279,66 @@ let ALL_JOBS = [];
 let sortCol = 'hours_old';
 let sortAsc = true;
 let activeFilters = { remote: false, hybrid: false, onsite: false, low: true, medium: true, high: true, greenhouse: false, lever: false, ashby: false, smartrecruiters: false, workable: false, jazz: false, workday: false };
+let locationTags = []; // multi-location filter tags
+
+// Common location suggestions pulled from job data
+const LOC_SUGGESTIONS = ['Remote','New York, NY','San Francisco, CA','Austin, TX','Seattle, WA','Boston, MA','Los Angeles, CA','Chicago, IL','Denver, CO','Miami, FL','London, UK','Toronto, Canada','United States','Europe'];
+
+function handleLocKey(e) {
+  if (e.key === 'Enter') {
+    const val = e.target.value.trim();
+    if (val) addLocationTag(val);
+    e.target.value = '';
+    document.getElementById('locSuggestions').style.display = 'none';
+  } else if (e.key === 'Escape') {
+    document.getElementById('locSuggestions').style.display = 'none';
+  }
+}
+
+function showLocSuggestions(val) {
+  const box = document.getElementById('locSuggestions');
+  if (!val.trim()) { box.style.display = 'none'; return; }
+
+  // Combine suggestions from static list + unique locations from loaded jobs
+  const jobLocs = [...new Set(ALL_JOBS.map(j => j.location).filter(Boolean))];
+  const all = [...new Set([...LOC_SUGGESTIONS, ...jobLocs])];
+  const matches = all.filter(l => l.toLowerCase().includes(val.toLowerCase()) && !locationTags.includes(l.toLowerCase())).slice(0, 6);
+
+  if (!matches.length) { box.style.display = 'none'; return; }
+  box.innerHTML = matches.map(m => `<div class="loc-suggestion-item" onclick="addLocationTag('${m.replace(/'/g,"\'")}')"><svg width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' style='margin-right:5px;opacity:.5'><path d='M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z'/><circle cx='12' cy='10' r='3'/></svg>${m}</div>`).join('');
+  box.style.display = 'block';
+}
+
+function addLocationTag(val) {
+  const tag = val.trim().toLowerCase();
+  if (!tag || locationTags.includes(tag)) return;
+  locationTags.push(tag);
+  document.getElementById('fLocation').value = '';
+  document.getElementById('locSuggestions').style.display = 'none';
+  renderLocTags();
+  applyFilters();
+}
+
+function removeLocationTag(tag) {
+  locationTags = locationTags.filter(t => t !== tag);
+  renderLocTags();
+  applyFilters();
+}
+
+function renderLocTags() {
+  const wrap = document.getElementById('locTagWrap');
+  wrap.innerHTML = locationTags.map(tag =>
+    `<span class="loc-tag">${tag}<button onclick="removeLocationTag('${tag}')" title="Remove">&#215;</button></span>`
+  ).join('');
+}
+
+// Close suggestions on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('#fLocation') && !e.target.closest('#locSuggestions')) {
+    const s = document.getElementById('locSuggestions');
+    if (s) s.style.display = 'none';
+  }
+});
 let appliedSet = new Set(JSON.parse(localStorage.getItem('jr_applied') || '[]'));
 let showAppliedOnly = false;
 
@@ -1039,8 +1414,8 @@ function updateStats() {
   document.getElementById('s24h').textContent    = j.filter(x=>(x.hours_old??9999)<=24).length;
   document.getElementById('s7d').textContent     = j.filter(x=>(x.days_old??9999)<=7).length;
   document.getElementById('sLegit').textContent  = j.filter(x=>x.ghost_risk==='low').length;
-  document.getElementById('sGhost').textContent  = j.filter(x=>x.ghost_risk==='high').length;
   document.getElementById('sRemote').textContent = j.filter(x=>x.remote_ok==1).length;
+  document.getElementById('tabBadgeJobs').textContent = j.length;
 }
 
 function updateSources() {
@@ -1068,6 +1443,8 @@ function updateApplied() {
   const deletedApplied = allAppliedIds.filter(id => !inFeedIds.has(id));
 
   document.getElementById('appliedCount').textContent = allAppliedIds.length;
+  document.getElementById('sAppliedStat').textContent  = allAppliedIds.length;
+  document.getElementById('tabBadgeApplied').textContent = allAppliedIds.length;
 
   // Render applied log (shows all applied, including deleted postings)
   const log = document.getElementById('appliedLog');
@@ -1258,7 +1635,8 @@ function applyFilters() {
   const search   = document.getElementById('fSearch').value.toLowerCase();
   const title    = document.getElementById('fTitle').value.toLowerCase();
   const company  = document.getElementById('fCompany').value.toLowerCase();
-  const location = document.getElementById('fLocation').value.toLowerCase();
+  // multi-location: match any of the selected tags
+  const locInput = document.getElementById('fLocation').value.toLowerCase();
   const durVal   = parseInt(document.getElementById('fDurVal').value) || null;
   const durUnit  = document.getElementById('fDurUnit').value;
   const sortKey  = document.getElementById('sortSelect').value;
@@ -1282,7 +1660,11 @@ function applyFilters() {
     if (search && ![(j.company||''),(j.title||''),(j.location||''),(j.department||'')].join(' ').toLowerCase().includes(search)) return false;
     if (title   && !(j.title||'').toLowerCase().includes(title))    return false;
     if (company && !(j.company||'').toLowerCase().includes(company)) return false;
-    if (location && !(j.location||'').toLowerCase().includes(location)) return false;
+    // location: must match ALL tags (AND logic) or the live input text
+    if (locationTags.length > 0) {
+      const jloc = (j.location||'').toLowerCase();
+      if (!locationTags.every(tag => jloc.includes(tag))) return false;
+    } else if (locInput && !(j.location||'').toLowerCase().includes(locInput)) return false;
 
     if (maxHours !== null) {
       const jobHours = j.hours_old ?? (j.days_old != null ? j.days_old * 24 : null);
@@ -1452,7 +1834,278 @@ function exportCSV() {
   a.click();
 }
 
-// AUTO-LOAD
+// ── MAIN TAB SWITCHING ──────────────────────────────────
+let activeMainTab = 'jobs';
+function switchMainTab(tab) {
+  activeMainTab = tab;
+  ['jobs','applied','match'].forEach(t => {
+    document.getElementById('tab-btn-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tabpane-'+t).classList.toggle('active', t===tab);
+  });
+  if (tab === 'applied') renderAppliedTab();
+}
+
+// ── APPLIED TAB ──────────────────────────────────────────
+let appliedNotes  = JSON.parse(localStorage.getItem('jr_notes')  || '{}');
+let appliedStatus = JSON.parse(localStorage.getItem('jr_status') || '{}');
+let appliedSortCol = 'appliedAt';
+let appliedSortAsc = false;
+
+function saveNotes()  { localStorage.setItem('jr_notes',  JSON.stringify(appliedNotes));  }
+function saveStatus() { localStorage.setItem('jr_status', JSON.stringify(appliedStatus)); }
+
+const STATUS_OPTIONS = ['Applied','Phone Screen','Interview','Final Round','Offer','Rejected'];
+const STATUS_COLORS  = {
+  'Applied':      {bg:'#eff4ff',color:'#635bff'},
+  'Phone Screen': {bg:'#ecfdf5',color:'#059669'},
+  'Interview':    {bg:'#fffbeb',color:'#d97706'},
+  'Final Round':  {bg:'#fef3c7',color:'#b45309'},
+  'Offer':        {bg:'#d1fae5',color:'#065f46'},
+  'Rejected':     {bg:'#fff1f2',color:'#e11d48'},
+};
+
+function getAppliedRows() {
+  const allIds = [...appliedSet];
+  const inFeedMap = {};
+  ALL_JOBS.forEach(j => { if (appliedSet.has(j.id)) inFeedMap[j.id] = j; });
+
+  return allIds.map(id => {
+    const job  = inFeedMap[id];
+    const meta = appliedMeta[id] || {};
+    return {
+      id,
+      company:   job?.company  || meta.company || '?',
+      title:     job?.title    || meta.title   || 'Job removed',
+      url:       job?.url      || meta.url     || '#',
+      appliedAt: meta.appliedAt || null,
+      status:    appliedStatus[id] || 'Applied',
+      notes:     appliedNotes[id]  || '',
+      active:    !!job,
+    };
+  });
+}
+
+function sortApplied(col) {
+  if (appliedSortCol === col) appliedSortAsc = !appliedSortAsc;
+  else { appliedSortCol = col; appliedSortAsc = col === 'company' || col === 'title'; }
+  renderAppliedTab();
+}
+
+function renderAppliedTab() {
+  let rows = getAppliedRows();
+
+  // sort
+  rows.sort((a,b) => {
+    let va = a[appliedSortCol], vb = b[appliedSortCol];
+    if (!va && !vb) return 0;
+    if (!va) return 1; if (!vb) return -1;
+    if (va < vb) return appliedSortAsc ? -1 : 1;
+    if (va > vb) return appliedSortAsc ?  1 : -1;
+    return 0;
+  });
+
+  const empty = document.getElementById('appliedEmptyState');
+  const table = document.getElementById('appliedTable');
+  const tbody = document.getElementById('appliedTbody');
+  const info  = document.getElementById('appliedInfo');
+
+  info.textContent = rows.length + ' application' + (rows.length !== 1 ? 's' : '');
+
+  if (!rows.length) {
+    empty.style.display = 'block';
+    table.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  table.style.display = 'table';
+
+  tbody.innerHTML = rows.map(r => {
+    const sc = STATUS_COLORS[r.status] || STATUS_COLORS['Applied'];
+    const date = r.appliedAt ? new Date(r.appliedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+    const removedTag = !r.active ? '<span style="font-size:10px;color:var(--red);margin-left:4px">(removed)</span>' : '';
+
+    const statusOpts = STATUS_OPTIONS.map(s =>
+      `<option value="${s}" ${s===r.status?'selected':''}>${s}</option>`
+    ).join('');
+
+    return `<tr id="arow-${r.id}" style="${!r.active?'opacity:0.6':''}">
+      <td style="font-family:var(--mono);font-size:11px;color:var(--muted);width:110px">${date}</td>
+      <td style="font-weight:600;font-size:13px;letter-spacing:-0.01em;width:130px">${r.company}</td>
+      <td title="${r.title}">${r.title}${removedTag}</td>
+      <td style="width:140px">
+        <select class="applied-status-select" style="background:${sc.bg};color:${sc.color};border-color:${sc.bg}"
+          onchange="updateStatus('${r.id}', this.value)">${statusOpts}</select>
+      </td>
+      <td>
+        <input type="text" value="${r.notes.replace(/"/g,'&quot;')}" placeholder="Add notes..."
+          style="font-size:12px;padding:4px 7px;border-radius:5px;width:100%;min-width:120px"
+          onblur="updateNotes('${r.id}', this.value)"
+          onkeydown="if(event.key==='Enter')this.blur()">
+      </td>
+      <td style="width:50px">
+        ${r.url&&r.url!=='#'?`<a href="${r.url}" target="_blank" class="apply-link" title="Open posting">&#8599;</a>`:'—'}
+      </td>
+      <td style="width:50px">
+        <button onclick="toggleApplied('${r.id}')" class="mark-btn" title="Remove from applied" style="color:var(--red)">&#10005;</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStatus(id, val) {
+  appliedStatus[id] = val;
+  saveStatus();
+  // update badge color inline
+  const sc = STATUS_COLORS[val] || STATUS_COLORS['Applied'];
+  const sel = document.querySelector(`#arow-${id} .applied-status-select`);
+  if (sel) { sel.style.background = sc.bg; sel.style.color = sc.color; }
+  document.getElementById('tabBadgeApplied').textContent = [...appliedSet].length;
+}
+
+function updateNotes(id, val) {
+  appliedNotes[id] = val;
+  saveNotes();
+}
+
+function exportAppliedCSV() {
+  const rows = getAppliedRows();
+  if (!rows.length) { alert('No applications to export'); return; }
+  const hdr = ['Company','Title','Status','Notes','Applied On','URL','Active'];
+  const lines = [hdr.join(',')];
+  rows.forEach(r => {
+    const date = r.appliedAt ? new Date(r.appliedAt).toLocaleDateString() : '';
+    lines.push([r.company,r.title,r.status,r.notes,date,r.url,r.active?'Yes':'No']
+      .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
+  });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([lines.join('
+')], {type:'text/csv'}));
+  a.download = 'jobradar_applications_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// ── RESUME MATCH ─────────────────────────────────────────
+function runMatch() {
+  const jd      = document.getElementById('matchJD').value.trim();
+  const resume  = document.getElementById('matchResume').value.trim();
+  const apiKey  = document.getElementById('matchApiKey').value.trim();
+  const btn     = document.getElementById('matchBtn');
+  const result  = document.getElementById('matchResult');
+
+  if (!jd)     { alert('Paste a job description first'); return; }
+  if (!resume) { alert('Paste your resume first'); return; }
+  if (!apiKey) { alert('Enter your Anthropic API key'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  result.style.display = 'none';
+
+  const prompt = `You are a senior PM hiring expert. Evaluate this candidate's fit.
+
+Job Description:
+${jd.slice(0,4000)}
+
+Resume:
+${resume.slice(0,4000)}
+
+Respond ONLY with valid JSON, no markdown:
+{
+  "score": <0-100>,
+  "verdict": "<Strong Apply|Apply|Apply with Caution|Skip>",
+  "summary": "<2-3 sentence assessment>",
+  "strengths": ["<strength 1>","<strength 2>","<strength 3>"],
+  "gaps": [{"gap":"<missing req>","severity":"critical|moderate|minor","suggestion":"<how to address>"}],
+  "tailored_bullets": ["<rewritten bullet 1>","<rewritten bullet 2>"],
+  "cover_letter_angle": "<best opening hook for this role>"
+}`;
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1500,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) throw new Error(data.error.message);
+    let raw = data.content[0].text.trim().replace(/^```json|^```|```$/g,'').trim();
+    return JSON.parse(raw);
+  })
+  .then(r => renderMatchResult(r))
+  .catch(e => {
+    result.style.display = 'block';
+    result.innerHTML = `<div style="background:var(--red-bg);border:1px solid #fda4af;border-radius:var(--radius);padding:14px;color:var(--red);font-size:13px">
+      <strong>Error:</strong> ${e.message}<br><br>
+      <span style="color:var(--muted);font-size:12px">Make sure your API key is correct. Get one at <a href="https://console.anthropic.com" target="_blank" style="color:var(--accent)">console.anthropic.com</a></span>
+    </div>`;
+  })
+  .finally(() => {
+    btn.disabled = false;
+    btn.innerHTML = 'Analyze Match';
+  });
+}
+
+function renderMatchResult(r) {
+  const score   = r.score ?? 0;
+  const verdict = r.verdict ?? '';
+  const vClass  = {'Strong Apply':'verdict-strong','Apply':'verdict-apply','Apply with Caution':'verdict-caution','Skip':'verdict-skip'}[verdict] || 'verdict-apply';
+
+  const scoreColor = score >= 75 ? '#059669' : score >= 55 ? '#d97706' : '#e11d48';
+
+  const strengthsHTML = (r.strengths||[]).map(s =>
+    `<div class="match-item"><span style="color:var(--green);font-size:14px;flex-shrink:0">&#10003;</span><span>${s}</span></div>`
+  ).join('');
+
+  const gapsHTML = (r.gaps||[]).map(g =>
+    `<div class="match-item">
+      <span class="match-severity sev-${g.severity}">${g.severity}</span>
+      <div><div style="font-weight:500;margin-bottom:3px">${g.gap}</div>
+      <div style="font-size:12px;color:var(--muted)">${g.suggestion}</div></div>
+    </div>`
+  ).join('');
+
+  const bulletsHTML = (r.tailored_bullets||[]).map(b =>
+    `<div class="match-item"><span style="color:var(--accent);font-size:14px;flex-shrink:0">&#8227;</span><span style="font-family:var(--mono);font-size:12px">${b}</span></div>`
+  ).join('');
+
+  const el = document.getElementById('matchResult');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <div class="match-result-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+        <div>
+          <div class="match-score-big" style="color:${scoreColor}">${score}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px">out of 100</div>
+          <span class="match-verdict-badge ${vClass}">${verdict}</span>
+        </div>
+        <div style="flex:1;font-size:13px;line-height:1.65;color:var(--muted);padding-top:4px">${r.summary||''}</div>
+      </div>
+
+      <div class="match-section-title">Strengths</div>
+      ${strengthsHTML}
+
+      <div class="match-section-title">Gaps to Address</div>
+      ${gapsHTML}
+
+      <div class="match-section-title">Tailored Resume Bullets</div>
+      ${bulletsHTML}
+
+      <div class="match-section-title">Cover Letter Angle</div>
+      <div style="font-size:13px;line-height:1.65;padding:10px 12px;background:var(--accent-bg);border-radius:var(--radius);color:var(--text)">${r.cover_letter_angle||''}</div>
+    </div>`;
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── AUTO-LOAD
 async function autoLoad() {
   renderTierSummary();
   if (!location.protocol.startsWith('http')) return;
@@ -1464,6 +2117,13 @@ async function autoLoad() {
 }
 
 autoLoad();
+
+// Restore saved API key
+const savedKey = localStorage.getItem('jr_api_key');
+if (savedKey) {
+  const el = document.getElementById('matchApiKey');
+  if (el) el.value = savedKey;
+}
 </script>
 </body>
 </html>

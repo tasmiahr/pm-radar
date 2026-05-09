@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# jobs.db is now committed to the repo for persistence
+# (previously ignored — removed so the bot can commit it)
+
+# Resume files are personal — never commit
+resumes/
+
+# Local exports with custom names
+*.csv
+*_export.json
+
+# macOS
+.DS_Store

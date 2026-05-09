@@ -1,0 +1,167 @@
+# .github/workflows/scrape.yml
+#
+# JobRadar — Automated Scraper + Dashboard Updater
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+#
+# WHAT THIS DOES (in order):
+#   1. Checks out your repo
+#   2. Installs Python + dependencies
+#   3. Restores jobs.db from the previous run (cached)
+#   4. Runs run_scraper.py  → updates jobs.db with new jobs
+#   5. Runs export_dashboard.py → writes dashboard_data.json
+#   6. Commits dashboard_data.json back to the repo
+#   7. GitHub Pages serves the updated JSON automatically
+#   8. Runs notify.py → sends email/Discord/Slack if new jobs found
+#
+# SCHEDULE: Every 6 hours on weekdays (adjust cron below)
+#   "0 */6 * * 1-5"  = 00:00, 06:00, 12:00, 18:00 UTC Mon–Fri
+#
+# TO CHANGE FREQUENCY — edit the cron line:
+#   Every 4 hours:  "0 */4 * * 1-5"
+#   Every 12 hours: "0 */12 * * 1-5"
+#   Twice a day:    "0 9,17 * * 1-5"   (9am + 5pm UTC)
+#   Once a day:     "0 9 * * 1-5"      (9am UTC weekdays)
+#
+# REQUIRED SETUP:
+#   1. Repo Settings → Pages → Source: "GitHub Actions"  (or "Deploy from branch: main")
+#   2. Repo Settings → Actions → General → Workflow permissions → "Read and write permissions"
+#
+# OPTIONAL — add any of these to Repo Settings → Secrets → Actions:
+#   GEMINI_API_KEY         your Gemini API key (aistudio.google.com → Get API Key)
+#   NOTIFY_EMAIL_TO        your@email.com
+#   NOTIFY_EMAIL_FROM      your-gmail@gmail.com
+#   NOTIFY_EMAIL_PASS      Gmail App Password
+#   NOTIFY_DISCORD_WEBHOOK https://discord.com/api/webhooks/...
+#   NOTIFY_SLACK_WEBHOOK   https://hooks.slack.com/services/...
+#   DASHBOARD_URL          https://YOUR-USERNAME.github.io/jobradar
+#                          (set this so notification links work correctly)
+
+name: JobRadar — Scrape & Update Dashboard
+
+on:
+  schedule:
+    - cron: "0 */6 * * 1-5"   # every 6 hours, weekdays
+  workflow_dispatch:            # manual trigger from GitHub UI
+    inputs:
+      keyword:
+        description: 'Keyword to search all ATS platforms (e.g. "product manager")'
+        required: false
+        default: "product manager"
+
+jobs:
+  scrape:
+    name: Scrape → Export → Commit → Notify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+
+      # ── 1. Checkout ────────────────────────────────────────────
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ── 2. Python setup ────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # ── 3. Ensure data directory exists ───────────────────────────
+      # jobs.db is now committed to the repo, so checkout@v4 already
+      # restored it above. No cache needed — the repo IS the persistence.
+      - name: Create data directory
+        run: |
+          mkdir -p data
+          if [ -f data/jobs.db ]; then
+            echo "✅ jobs.db restored from repo ($(du -sh data/jobs.db | cut -f1))"
+          else
+            echo "ℹ️  No jobs.db yet — will be created fresh on first run"
+          fi
+
+      # ── 4. Run scraper ─────────────────────────────────────────
+      # --global searches ALL companies on Greenhouse, SmartRecruiters, Workable
+      # in addition to your watchlist. Requires a keyword to avoid pulling
+      # millions of unrelated jobs.
+      - name: Scrape job listings
+        run: |
+          KEYWORD="${{ github.event.inputs.keyword || 'product manager' }}"
+          echo "Scraping watchlist + global ATS search for: $KEYWORD"
+          python run_scraper.py --keyword "$KEYWORD" --global
+
+      # ── 4b. Auto-match new jobs against resume ─────────────────
+      # Scores all unscored jobs using Gemini 1.5 Flash (free tier).
+      # Skips silently if GEMINI_API_KEY secret is not set.
+      # Skips silently if resumes/resume.txt does not exist in repo.
+      # Rate-limited to ~12 req/min to stay within Gemini free limits.
+      - name: Score jobs against resume
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python auto_match.py --limit 80
+
+      # ── 5. Export to JSON ──────────────────────────────────────
+      - name: Export dashboard data
+        run: python export_dashboard.py
+
+      # ── 6. Capture new job count for notification ──────────────
+      - name: Read new job count
+        id: jobcount
+        run: |
+          # Pull new_this_run from the JSON metadata
+          NEW=$(python -c "
+          import json
+          d = json.load(open('dashboard_data.json'))
+          print(d.get('meta', {}).get('new_this_run', 0))
+          ")
+          TOTAL=$(python -c "
+          import json
+          d = json.load(open('dashboard_data.json'))
+          print(d.get('meta', {}).get('total', 0))
+          ")
+          echo "new=$NEW"   >> $GITHUB_OUTPUT
+          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "📊 New: $NEW | Total: $TOTAL"
+
+      # ── 7. Commit dashboard_data.json + jobs.db back to repo ──────
+      - name: Commit updated data
+        run: |
+          git config user.name  "JobRadar Bot"
+          git config user.email "jobradar-bot@users.noreply.github.com"
+          git add dashboard_data.json data/jobs.db
+          if git diff --staged --quiet; then
+            echo "No changes to commit (no new jobs)"
+          else
+            git commit -m "🤖 JobRadar: +${{ steps.jobcount.outputs.new }} new jobs [$(date -u +'%Y-%m-%d %H:%M UTC')]"
+            git push
+          fi
+
+      # ── 8. Send notifications ──────────────────────────────────
+      - name: Send new-job notifications
+        if: steps.jobcount.outputs.new != '0'
+        env:
+          NOTIFY_EMAIL_TO:        ${{ secrets.NOTIFY_EMAIL_TO }}
+          NOTIFY_EMAIL_FROM:      ${{ secrets.NOTIFY_EMAIL_FROM }}
+          NOTIFY_EMAIL_PASS:      ${{ secrets.NOTIFY_EMAIL_PASS }}
+          NOTIFY_DISCORD_WEBHOOK: ${{ secrets.NOTIFY_DISCORD_WEBHOOK }}
+          NOTIFY_SLACK_WEBHOOK:   ${{ secrets.NOTIFY_SLACK_WEBHOOK }}
+        run: |
+          DASHBOARD_URL="${{ secrets.DASHBOARD_URL || format('https://{0}.github.io/jobradar', github.repository_owner) }}"
+          python notify.py \
+            --new   ${{ steps.jobcount.outputs.new }} \
+            --total ${{ steps.jobcount.outputs.total }} \
+            --dashboard-url "$DASHBOARD_URL"
+
+      # ── 9. Summary ─────────────────────────────────────────────
+      - name: Print run summary
+        run: |
+          echo "## 📡 JobRadar Run Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| New jobs found | ${{ steps.jobcount.outputs.new }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Total in pipeline | ${{ steps.jobcount.outputs.total }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Run time | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
