@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>JobRadar</title>
+<title>PM Radar</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -656,21 +656,21 @@ table {
 }
 
 thead th {
-  background: var(--text);
+  background: var(--surface2);
   padding: 9px 14px;
   text-align: left;
-  font-size: 8px;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #c8bfb0;
-  border-bottom: none;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--muted);
+  border-bottom: 1.5px solid var(--border);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   position: sticky;
   top: 58px;
-  font-family: var(--mono);
+  font-family: var(--sans);
 }
 
 thead th:hover { color: var(--text); }
@@ -701,8 +701,6 @@ tbody td {
 .col-title    { width: auto; min-width: 220px; }
 .col-location { width: 150px; }
 .col-legit    { width: 90px; }
-.col-salary   { width: 120px; }
-.col-apps     { width: 90px; }
 .col-source   { width: 100px; }
 .col-match    { width: 80px; }
 .col-action   { width: 80px; }
@@ -760,8 +758,6 @@ tbody td {
 .src-jazz           { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
 .src-workday        { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
 
-.salary-val { font-family: var(--mono); font-size: 11px; color: #059669; font-weight: 500; }
-.na-val     { color: var(--muted2); }
 
 .match-wrap { display: flex; align-items: center; gap: 5px; }
 .match-track { width: 32px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
@@ -883,7 +879,7 @@ textarea:focus { border-color: var(--accent); }
   <div class="logo">
     <div class="logo-mark">&#9685;</div>
     <div>
-      <div class="logo-name">JobRadar <span class="logo-tag">/ pipeline</span></div>
+      <div class="logo-name">PM Radar <span class="logo-tag">/ pipeline</span></div>
     </div>
   </div>
   <div class="header-right">
@@ -1110,8 +1106,6 @@ textarea:focus { border-color: var(--accent); }
               <th class="col-title" onclick="clickSort('title')">Job Title</th>
               <th class="col-location" onclick="clickSort('location')">Location</th>
               <th class="col-legit" onclick="clickSort('ghost_risk')">Legit?</th>
-              <th class="col-salary" onclick="clickSort('salary')">Salary</th>
-              <th class="col-apps" onclick="clickSort('applicants')">Applicants</th>
               <th class="col-source" onclick="clickSort('source')">Source</th>
               <th class="col-match" onclick="clickSort('match_score')">Match</th>
               <th class="col-action">Apply</th>
@@ -1734,24 +1728,33 @@ function clickSort(col) {
 }
 
 function sortRows(rows, key) {
-  const asc = key === 'company' || key === 'title' || key === 'location' || key === 'ghost_risk';
-  let realKey = key;
-  if (key === 'days_old_asc') { realKey = 'days_old'; }
-  const dirAsc = key === 'days_old_asc' ? false : asc;
-
   return [...rows].sort((a,b) => {
-    let va = a[realKey], vb = b[realKey];
-    if (realKey === 'hours_old' || realKey === 'days_old') {
-      va = a.hours_old ?? (a.days_old != null ? a.days_old*24 : 999999);
-      vb = b.hours_old ?? (b.days_old != null ? b.days_old*24 : 999999);
+    // For time-based sorts: smaller hours_old = newer = should appear first (ascending)
+    if (key === 'hours_old' || key === 'days_old_asc') {
+      const va = a.hours_old ?? (a.days_old != null ? a.days_old*24 : 999999);
+      const vb = b.hours_old ?? (b.days_old != null ? b.days_old*24 : 999999);
+      return key === 'days_old_asc' ? vb - va : va - vb;
     }
+
+    // Match score: higher = better = first
+    if (key === 'match_score') {
+      const va = a.match_score ?? -1;
+      const vb = b.match_score ?? -1;
+      return vb - va;
+    }
+
+    let va = a[key], vb = b[key];
     if (va==null && vb==null) return 0;
     if (va==null) return 1;
     if (vb==null) return -1;
     if (typeof va==='string') va=va.toLowerCase();
     if (typeof vb==='string') vb=vb.toLowerCase();
-    if (va<vb) return dirAsc ? -1 : 1;
-    if (va>vb) return dirAsc ?  1 : -1;
+
+    // Alphabetical sorts: A-Z ascending
+    const ascKeys = ['company','title','location','source','ghost_risk'];
+    const dir = ascKeys.includes(key) ? 1 : -1;
+    if (va<vb) return -1 * dir;
+    if (va>vb) return  1 * dir;
     return 0;
   });
 }
@@ -1807,16 +1810,12 @@ function render(rows) {
 
   tbody.innerHTML = rows.map(j => {
     const isApplied = appliedSet.has(j.id);
-    const salary = j.salary ? `<span class="salary-val">${j.salary}</span>` : '<span class="na-val">—</span>';
-    const apps   = j.applicants != null ? `<span style="font-family:var(--mono);font-size:11px">${j.applicants.toLocaleString()}</span>` : '<span class="na-val">—</span>';
     return `<tr id="row-${j.id}">
       <td class="col-posted">${ageHTML(j)}<div style="font-size:10px;color:var(--muted2);font-family:var(--mono);margin-top:1px">${j.posted_at||''}</div></td>
       <td class="col-company td-company">${j.company}</td>
       <td class="col-title" title="${j.title}">${j.title}</td>
       <td class="col-location">${locationHTML(j)}</td>
       <td class="col-legit">${legitHTML(j)}</td>
-      <td class="col-salary">${salary}</td>
-      <td class="col-apps">${apps}</td>
       <td class="col-source">${srcHTML(j.source)}</td>
       <td class="col-match">${matchHTML(j.match_score)}</td>
       <td class="col-action">
@@ -1855,7 +1854,7 @@ function toggleApplied(id) {
 function exportCSV() {
   const rows = document.querySelectorAll('#jobTbody tr');
   if (!rows.length) { alert('No jobs to export'); return; }
-  const headers = ['Company','Title','Location','Posted','Ghost Risk','Salary','Applicants','Source','Match Score','URL','Applied'];
+  const headers = ['Company','Title','Location','Posted','Ghost Risk','Source','Match Score','URL','Applied'];
   const lines   = [headers.join(',')];
   ALL_JOBS.forEach(j => {
     const age = j.hours_old != null ? j.hours_old+'h' : (j.days_old+'d');
@@ -2175,6 +2174,9 @@ async function autoLoad() {
 }
 
 autoLoad();
+
+// Reset sort to most recent on every load (prevent browser restoring old value)
+document.getElementById('sortSelect').value = 'hours_old';
 
 // Restore saved API key
 const savedKey = localStorage.getItem('jr_api_key');

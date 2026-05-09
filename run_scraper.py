@@ -90,11 +90,146 @@ def keyword_match(job: dict, keyword: str) -> bool:
     )
 
 
+# All US states — full names and abbreviations
+US_STATES = {
+    "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+    "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+    "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+    "maine", "maryland", "massachusetts", "michigan", "minnesota",
+    "mississippi", "missouri", "montana", "nebraska", "nevada",
+    "new hampshire", "new jersey", "new mexico", "new york", "north carolina",
+    "north dakota", "ohio", "oklahoma", "oregon", "pennsylvania",
+    "rhode island", "south carolina", "south dakota", "tennessee", "texas",
+    "utah", "vermont", "virginia", "washington", "west virginia",
+    "wisconsin", "wyoming", "district of columbia",
+}
+
+US_STATE_ABBREVS = {
+    "al","ak","az","ar","ca","co","ct","de","fl","ga","hi","id","il","in",
+    "ia","ks","ky","la","me","md","ma","mi","mn","ms","mo","mt","ne","nv",
+    "nh","nj","nm","ny","nc","nd","oh","ok","or","pa","ri","sc","sd","tn",
+    "tx","ut","vt","va","wa","wv","wi","wy","dc",
+}
+
+# Major US cities — standalone city names without state that are clearly US
+US_CITIES = {
+    "new york", "los angeles", "chicago", "houston", "phoenix", "philadelphia",
+    "san antonio", "san diego", "dallas", "san jose", "austin", "jacksonville",
+    "fort worth", "columbus", "charlotte", "indianapolis", "san francisco",
+    "seattle", "denver", "nashville", "oklahoma city", "el paso", "washington",
+    "boston", "portland", "las vegas", "memphis", "louisville", "baltimore",
+    "milwaukee", "albuquerque", "tucson", "fresno", "sacramento", "mesa",
+    "kansas city", "atlanta", "omaha", "colorado springs", "raleigh",
+    "long beach", "virginia beach", "miami", "oakland", "minneapolis",
+    "tulsa", "tampa", "arlington", "new orleans", "cleveland", "bakersfield",
+    "aurora", "anaheim", "santa ana", "corpus christi", "riverside", "lexington",
+    "st. louis", "pittsburgh", "stockton", "anchorage", "cincinnati",
+    "st. paul", "greensboro", "lincoln", "orlando", "irvine", "newark",
+    "durham", "chula vista", "plano", "fort wayne", "chandler", "madison",
+    "lubbock", "scottsdale", "reno", "buffalo", "gilbert", "glendale",
+    "north las vegas", "winston-salem", "chesapeake", "norfolk", "fremont",
+    "garland", "irving", "hialeah", "richmond", "baton rouge", "birmingham",
+    "rochester", "spokane", "des moines", "montgomery", "modesto", "fayetteville",
+    "tacoma", "fontana", "moreno valley", "glendale", "akron", "yonkers",
+    "aurora", "huntington beach", "little rock", "tempe", "worcester",
+    "salt lake city", "knoxville", "new haven", "providence", "oxnard",
+    "hartford", "bridgeport", "syracuse", "albany", "springfield",
+    "new york city", "nyc", "sf", "la", "dc",
+    # Common tech hub shorthand
+    "bay area", "silicon valley", "research triangle",
+}
+
+def is_us_location(loc: str) -> bool:
+    """
+    Return True if a location string appears to be in the United States.
+    Handles: full country name, state names, state abbreviations (with comma),
+    standalone city names, remote, and empty locations.
+    """
+    loc = loc.lower().strip()
+
+    if not loc:
+        return True  # no location = include (likely remote)
+
+    # Explicit remote/distributed = US-eligible
+    if any(w in loc for w in ["remote", "anywhere", "distributed", "work from home", "wfh"]):
+        return True
+
+    # Explicit US markers
+    if any(m in loc for m in ["united states", "usa", "u.s.", "u.s.a"]):
+        return True
+
+    # Explicit non-US countries — fast reject
+    non_us = [
+        "canada", "toronto", "vancouver", "montreal", "united kingdom", "london",
+        "england", "scotland", "ireland", "dublin", "australia", "sydney",
+        "melbourne", "germany", "berlin", "france", "paris", "netherlands",
+        "amsterdam", "india", "bangalore", "bengaluru", "hyderabad", "mumbai",
+        "singapore", "japan", "tokyo", "china", "beijing", "shanghai",
+        "brazil", "mexico", "poland", "warsaw", "spain", "madrid", "italy",
+        "rome", "milan", "sweden", "stockholm", "denmark", "oslo", "norway",
+        "finland", "israel", "tel aviv", "philippines", "indonesia",
+        "south korea", "seoul", "taiwan", "new zealand",
+    ]
+    if any(c in loc for c in non_us):
+        return False
+
+    # State full name anywhere in string
+    if any(state in loc for state in US_STATES):
+        return True
+
+    # State abbreviation with comma: ", CA" or ", NY" etc
+    import re as _re
+    if _re.search(r',\s*([a-z]{2})\b', loc):
+        m = _re.search(r',\s*([a-z]{2})\b', loc)
+        if m and m.group(1) in US_STATE_ABBREVS:
+            return True
+
+    # Standalone 2-letter state at end: "Austin TX" or "Austin, TX"
+    parts = _re.split(r'[\s,]+', loc)
+    if parts and parts[-1] in US_STATE_ABBREVS:
+        return True
+
+    # Known US city name
+    if any(city in loc for city in US_CITIES):
+        return True
+
+    # If location is very short and unrecognized, be inclusive (don't filter out)
+    if len(loc) < 20 and not any(c.isdigit() for c in loc):
+        return True
+
+    return False
+
+
+def location_match(job: dict, location_filter: str) -> bool:
+    """Return True if job location matches the filter."""
+    loc = (job.get("location") or "").lower()
+    lf  = location_filter.lower().strip()
+
+    if lf in ("usa", "united states", "us"):
+        return is_us_location(loc)
+
+    if lf == "remote":
+        return any(w in loc for w in ["remote", "anywhere", "distributed"]) or not loc
+
+    if lf == "canada":
+        return any(c in loc for c in ["canada", "toronto", "vancouver", "montreal", "calgary", "ottawa", ", on", ", bc", ", ab"])
+
+    if lf in ("uk", "united kingdom"):
+        return any(c in loc for c in ["united kingdom", "london", "manchester", "edinburgh", "england", ", uk"])
+
+    if lf == "europe":
+        return any(c in loc for c in ["europe", "london", "berlin", "amsterdam", "paris", "dublin", "stockholm", "copenhagen", "zurich"])
+
+    # Generic: check if filter string appears in location
+    return lf in loc or not loc
+
+
 # -----------------------------------------------------------------
 # MAIN RUN FUNCTION
 # -----------------------------------------------------------------
 
-def run(keyword: str = None, tier_filter: int = None, global_search: bool = False):
+def run(keyword: str = None, tier_filter: int = None, global_search: bool = False,
+        location_filter: str = None):
     init_db()
     conn = get_conn()
 
@@ -109,12 +244,12 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
     errors      = []
     start       = time.time()
 
-    print(f"\n🚀 JobRadar -- {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-    print(f"   Companies: {len(companies)} | Keyword: '{keyword or 'all roles'}'")
+    print(f"\n🚀 PM Radar -- {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    print(f"   Companies: {len(companies)} | Keyword: '{keyword or 'all roles'}' | Location: '{location_filter or 'anywhere'}'")
 
     if CUSTOM_SKIP:
         names = ", ".join(c[0] for c in CUSTOM_SKIP)
-        print(f"   ⏭️  Custom/browser-only (Phase 3): {names}")
+        print(f"   Skipping (browser-only): {names}")
     print()
 
     print(f"  {'COMPANY':<18} {'ATS':<12} {'FOUND':>6} {'NEW':>5}  RISK BREAKDOWN")
@@ -126,6 +261,9 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
 
             if keyword:
                 jobs = [j for j in jobs if keyword_match(j, keyword)]
+
+            if location_filter:
+                jobs = [j for j in jobs if location_match(j, location_filter)]
 
             new_count  = 0
             risk_tally = {}
@@ -158,6 +296,10 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
                 keyword=keyword,
                 max_per_platform=300,
             )
+            # Apply location filter to global results too
+            if location_filter:
+                global_jobs = [j for j in global_jobs if location_match(j, location_filter)]
+
             global_new = 0
             for job in global_jobs:
                 is_new = upsert_job(conn, job)
@@ -202,11 +344,15 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="JobRadar -- scrape jobs from your target companies"
+        description="PM Radar -- scrape jobs from your target companies"
     )
     parser.add_argument(
         "--keyword", "-k",
         help='Filter by keyword in title/dept/description. E.g. "product manager"'
+    )
+    parser.add_argument(
+        "--location", "-l",
+        help='Filter by location. E.g. "usa", "united states", "remote", "canada", "uk"'
     )
     parser.add_argument(
         "--tier", "-t",
@@ -217,7 +363,8 @@ if __name__ == "__main__":
         "--global", "-g",
         dest="global_search",
         action="store_true",
-        help="Also search ALL companies on Greenhouse/SmartRecruiters/Workable (requires --keyword)"
+        help="Also search ALL companies on SmartRecruiters/Workable (requires --keyword)"
     )
     args = parser.parse_args()
-    run(keyword=args.keyword, tier_filter=args.tier, global_search=args.global_search)
+    run(keyword=args.keyword, tier_filter=args.tier,
+        global_search=args.global_search, location_filter=args.location)
