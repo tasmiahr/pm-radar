@@ -13,9 +13,44 @@ from typing import Optional
 
 import requests
 
-from scrapers.ats import (
-    HEADERS, SESSION, _parse_age, _ghost_risk, _extract_salary, _build_job
+from scrapers.ats import HEADERS, SESSION, _parse_age, _ghost_risk, _build_job
+
+
+# Salary regex — duplicated here to avoid importing private function from ats.py
+_SALARY_RE = re.compile(
+    r'\$[\d,]+[kK]?\s*(?:[-\u2013\u2014to]+\s*\$[\d,]+[kK]?)?'
+    r'|USD\s*[\d,]+[kK]?\s*(?:[-\u2013\u2014to]+\s*[\d,]+[kK]?)?'
+    r'|\b[\d,]{5,}\s*(?:[-\u2013\u2014to]+\s*[\d,]{5,})?\s*(?:USD|per year|annually|\/yr)',
+    re.IGNORECASE
 )
+
+def _extract_salary(description: str, structured: str = None) -> Optional[str]:
+    if structured and str(structured).strip() and len(str(structured).strip()) > 3:
+        return str(structured).strip()
+    if not description:
+        return None
+    matches = _SALARY_RE.findall(description)
+    if not matches:
+        return None
+    best = max(matches, key=len).strip()
+    best = re.sub(r'\s+', ' ', best)
+    return best if len(best) <= 60 else None
+
+
+def _safe_get(url, params=None, retries=2):
+    for attempt in range(retries + 1):
+        try:
+            r = SESSION.get(url, params=params, timeout=20)
+            if r.status_code == 200:
+                return r.json()
+            if r.status_code == 404:
+                return None
+            if r.status_code == 429:
+                time.sleep(10)
+        except Exception as e:
+            if attempt == retries:
+                return None
+    return None
 
 
 # -----------------------------------------------------------------
@@ -373,19 +408,3 @@ def search_all_platforms(
         time.sleep(1)
 
     return all_jobs
-
-
-def _safe_get(url, params=None, retries=2):
-    for attempt in range(retries + 1):
-        try:
-            r = SESSION.get(url, params=params, timeout=20)
-            if r.status_code == 200:
-                return r.json()
-            if r.status_code == 404:
-                return None
-            if r.status_code == 429:
-                time.sleep(10)
-        except Exception as e:
-            if attempt == retries:
-                return None
-    return None
