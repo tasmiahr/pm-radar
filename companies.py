@@ -28,8 +28,8 @@ COMPANIES = [
     ("Zillow",       "greenhouse", "zillow",             1, "remote"),
     ("Airbnb",       "greenhouse", "airbnb",             1, "remote"),
     ("Adyen",        "greenhouse", "adyen",              1, "remote"),
-    ("NerdWallet",   "greenhouse", "nerdwallet",         1, "remote"),
-    ("ThePointsGuy", "greenhouse", "thepointsguy",       1, "remote"),
+    ("NerdWallet",   "ashby",      "nerdwallet",         1, "remote"),  # moved to Ashby
+    ("ThePointsGuy", "ashby",      "thepointsguy",       1, "remote"),  # try Ashby
     ("Block",        "greenhouse", "block",              1, "remote"),
     ("Coinbase",     "ashby",      "coinbase",           1, "remote"),  # moved to Ashby
     ("SoFi",         "greenhouse", "sofi",               1, "remote"),
@@ -45,8 +45,8 @@ COMPANIES = [
     ("Scale AI",     "ashby",      "scaleai",            1, "remote"),
     ("Glean",        "ashby",      "glean",              1, "remote"),
     ("Apollo.io",    "greenhouse", "apollo",             1, "remote"),
-    ("Bumble",       "greenhouse", "bumbleinc",          1, "remote"),
-    ("Canva",        "greenhouse", "canva",              1, "remote"),
+    ("Bumble",       "lever",      "bumbleinc",          1, "remote"),  # fixed slug
+    ("Canva",        "ashby",      "canva",              1, "remote"),  # try Ashby
     ("Realtor.com",  "greenhouse", "realtor",            1, "remote"),  # fixed slug
     ("Spotify",      "lever",      "spotify",            1, "remote"),
     ("Pinterest",    "greenhouse", "pinterest",          1, "remote"),
@@ -62,7 +62,7 @@ COMPANIES = [
     # ============================================================
     # TIER 2 -- Open To It
     # ============================================================
-    ("Hopper",       "greenhouse", "hopper",             2, "ok"),
+    ("Hopper",       "ashby",      "hopper",             2, "ok"),  # moved to Ashby
     ("eBay",         "greenhouse", "ebay",               2, "ok"),
     ("Nextdoor",     "ashby",      "nextdoor",           2, "ok"),  # moved to Ashby
     ("Experian",     "workday",    None,                 2, "ok"),
