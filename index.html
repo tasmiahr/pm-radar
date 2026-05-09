@@ -2012,8 +2012,7 @@ function exportAppliedCSV() {
       .map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(','));
   });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([lines.join('
-')], {type:'text/csv'}));
+  a.href = URL.createObjectURL(new Blob([lines.join('\r\n')], {type:'text/csv'}));
   a.download = 'jobradar_applications_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
 }
