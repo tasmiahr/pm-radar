@@ -45,7 +45,7 @@ COMPANIES = [
     ("Scale AI",     "ashby",      "scaleai",            1, "remote"),
     ("Glean",        "ashby",      "glean",              1, "remote"),
     ("Apollo.io",    "greenhouse", "apollo",             1, "remote"),
-    ("Bumble",       "greenhouse", "bumble",             1, "remote"),
+    ("Bumble",       "greenhouse", "bumbleinc",          1, "remote"),
     ("Canva",        "greenhouse", "canva",              1, "remote"),
     ("Realtor.com",  "greenhouse", "realtor",            1, "remote"),  # fixed slug
     ("Spotify",      "lever",      "spotify",            1, "remote"),
