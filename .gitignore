@@ -5,7 +5,7 @@ __pycache__/
 .env
 
 # The database stays local / in Actions cache — never commit it
-data/jobs.db
+#data/jobs.db
 
 # DO commit dashboard_data.json — GitHub Pages needs it
 # !dashboard_data.json  ← already tracked, this line not needed
