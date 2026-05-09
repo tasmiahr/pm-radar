@@ -1387,9 +1387,14 @@ function switchTab(t) {
 async function fetchFromUrl() {
   const status = document.getElementById('fetchStatus');
   status.textContent = 'Fetching...';
+  status.style.color = 'var(--muted)';
+  const base = location.pathname.endsWith('/')
+    ? location.pathname
+    : location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+  const dataUrl = base + 'dashboard_data.json?t=' + Date.now();
   try {
-    const res = await fetch('dashboard_data.json?t=' + Date.now());
-    if (!res.ok) throw new Error('HTTP ' + res.status + ' — file not found on this server');
+    const res = await fetch(dataUrl);
+    if (!res.ok) throw new Error('HTTP ' + res.status + ' — file not found. URL tried: ' + dataUrl);
     const data = await res.json();
     const jobs = Array.isArray(data) ? data : (data.jobs || []);
     if (!jobs.length) throw new Error('File exists but contains 0 jobs');
@@ -2140,12 +2145,19 @@ async function autoLoad() {
   document.getElementById('lastRun').textContent = 'Loading...';
 
   if (!location.protocol.startsWith('http')) {
-    document.getElementById('lastRun').textContent = 'Open on Netlify to auto-load';
+    document.getElementById('lastRun').textContent = 'Open on GitHub Pages to auto-load';
     return;
   }
 
+  // Works on both root (Netlify: tasmiahr.netlify.app/)
+  // and subdirectory (GitHub Pages: tasmiahr.github.io/pm-radar/)
+  const base = location.pathname.endsWith('/')
+    ? location.pathname
+    : location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+  const dataUrl = base + 'dashboard_data.json?t=' + Date.now();
+
   try {
-    const res = await fetch('dashboard_data.json?t=' + Date.now());
+    const res = await fetch(dataUrl);
     if (!res.ok) {
       document.getElementById('lastRun').textContent = 'dashboard_data.json not found (' + res.status + ')';
       return;
