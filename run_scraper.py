@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from companies import SCRAPEABLE, WORKDAY, CUSTOM_SKIP
 from scrapers.ats import scrape_company
 from scrapers.global_search import search_all_platforms
+from scrapers.jobspy_search import run_jobspy
 from db import get_conn, init_db
 
 
@@ -150,8 +151,16 @@ def is_us_location(loc: str) -> bool:
     if not loc:
         return True  # no location = include (likely remote)
 
-    # Explicit remote/distributed = US-eligible
+    # Explicit remote/distributed = US-eligible UNLESS qualified with non-US region
     if any(w in loc for w in ["remote", "anywhere", "distributed", "work from home", "wfh"]):
+        # Check if remote is qualified with a non-US region
+        non_us_qualifiers = [
+            "europe", "emea", "apac", "latam", "canada", "uk", "india",
+            "australia", "germany", "france", "netherlands", "ireland",
+            "brazil", "mexico", "asia", "africa",
+        ]
+        if any(q in loc for q in non_us_qualifiers):
+            return False  # e.g. "Remote - Europe", "Remote (EMEA only)"
         return True
 
     # Explicit US markers
@@ -201,27 +210,44 @@ def is_us_location(loc: str) -> bool:
 
 
 def location_match(job: dict, location_filter: str) -> bool:
-    """Return True if job location matches the filter."""
+    """
+    Return True if job location matches the filter.
+    location_filter can be comma-separated for multiple: "usa,canada"
+    """
     loc = (job.get("location") or "").lower()
-    lf  = location_filter.lower().strip()
 
-    if lf in ("usa", "united states", "us"):
-        return is_us_location(loc)
+    # Support comma-separated: "usa,canada" -> match if ANY matches
+    filters = [lf.strip() for lf in location_filter.lower().split(",") if lf.strip()]
 
-    if lf == "remote":
-        return any(w in loc for w in ["remote", "anywhere", "distributed"]) or not loc
+    for lf in filters:
+        if lf in ("usa", "united states", "us"):
+            if is_us_location(loc): return True
 
-    if lf == "canada":
-        return any(c in loc for c in ["canada", "toronto", "vancouver", "montreal", "calgary", "ottawa", ", on", ", bc", ", ab"])
+        elif lf == "remote":
+            if any(w in loc for w in ["remote", "anywhere", "distributed"]) or not loc:
+                return True
 
-    if lf in ("uk", "united kingdom"):
-        return any(c in loc for c in ["united kingdom", "london", "manchester", "edinburgh", "england", ", uk"])
+        elif lf == "canada":
+            if any(c in loc for c in ["canada", "toronto", "vancouver", "montreal",
+                                       "calgary", "ottawa", ", on", ", bc", ", ab"]):
+                return True
 
-    if lf == "europe":
-        return any(c in loc for c in ["europe", "london", "berlin", "amsterdam", "paris", "dublin", "stockholm", "copenhagen", "zurich"])
+        elif lf in ("uk", "united kingdom"):
+            if any(c in loc for c in ["united kingdom", "london", "manchester",
+                                       "edinburgh", "england", ", uk"]):
+                return True
 
-    # Generic: check if filter string appears in location
-    return lf in loc or not loc
+        elif lf == "europe":
+            if any(c in loc for c in ["europe", "london", "berlin", "amsterdam",
+                                       "paris", "dublin", "stockholm", "zurich"]):
+                return True
+
+        else:
+            # Generic: filter string appears in location, or no location
+            if lf in loc or not loc:
+                return True
+
+    return False
 
 
 # -----------------------------------------------------------------
@@ -229,7 +255,7 @@ def location_match(job: dict, location_filter: str) -> bool:
 # -----------------------------------------------------------------
 
 def run(keyword: str = None, tier_filter: int = None, global_search: bool = False,
-        location_filter: str = None):
+        location_filter: str = None, use_jobspy: bool = False):
     init_db()
     conn = get_conn()
 
@@ -314,6 +340,52 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
             print(f"  ❌ Global search error: {e}")
     elif global_search and not keyword:
         print("\n  ⚠️  --global requires --keyword to avoid pulling millions of jobs")
+
+    # ── JOBSPY SEARCH (Indeed, Google Jobs, ZipRecruiter) ────────────
+    if use_jobspy and keyword:
+        print(f"\n  🔍 JobSpy search across Indeed, Google, ZipRecruiter...")
+        print(f"  {'-'*60}")
+        try:
+            # Convert location filter to a JobSpy-friendly string
+            jobspy_location = "United States"
+            if location_filter:
+                lf = location_filter.lower().split(",")[0].strip()
+                if lf in ("usa", "united states", "us"):
+                    jobspy_location = "United States"
+                elif lf == "remote":
+                    jobspy_location = "United States"
+                elif lf == "canada":
+                    jobspy_location = "Canada"
+                elif lf in ("uk", "united kingdom"):
+                    jobspy_location = "United Kingdom"
+                else:
+                    jobspy_location = location_filter.split(",")[0].strip()
+
+            jobspy_jobs = run_jobspy(
+                keyword=keyword,
+                location=jobspy_location,
+                hours_old=72,           # last 3 days
+                results_per_site=100,   # per source
+                is_remote=False,        # don't filter remote-only
+            )
+
+            if location_filter:
+                jobspy_jobs = [j for j in jobspy_jobs if location_match(j, location_filter)]
+
+            jobspy_new = 0
+            for job in jobspy_jobs:
+                is_new = upsert_job(conn, job)
+                if is_new:
+                    jobspy_new += 1
+            conn.commit()
+            total_found += len(jobspy_jobs)
+            total_new   += jobspy_new
+            print(f"  🔍 JobSpy: {len(jobspy_jobs)} jobs, {jobspy_new} new")
+        except Exception as e:
+            errors.append(f"JobSpy: {e}")
+            print(f"  ❌ JobSpy error: {e}")
+    elif use_jobspy and not keyword:
+        print("\n  ⚠️  --jobspy requires --keyword")
         print("      Example: python run_scraper.py --global -k 'product manager'")
 
     elapsed = time.time() - start
@@ -365,6 +437,13 @@ if __name__ == "__main__":
         action="store_true",
         help="Also search ALL companies on SmartRecruiters/Workable (requires --keyword)"
     )
+    parser.add_argument(
+        "--jobspy", "-j",
+        dest="use_jobspy",
+        action="store_true",
+        help="Also search Indeed, Google Jobs, ZipRecruiter via JobSpy (requires --keyword)"
+    )
     args = parser.parse_args()
     run(keyword=args.keyword, tier_filter=args.tier,
-        global_search=args.global_search, location_filter=args.location)
+        global_search=args.global_search, location_filter=args.location,
+        use_jobspy=args.use_jobspy)
