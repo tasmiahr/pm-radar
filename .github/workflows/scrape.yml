@@ -20,7 +20,7 @@ on:
         required: false
         default: "product manager"
       location:
-        description: 'Location filter (e.g. "usa", "remote", "canada", "uk"). Leave blank for all.'
+        description: 'Location filter — comma separated for multiple: "usa", "usa,canada", "remote". Leave blank for all.'
         required: false
         default: "usa"
 
@@ -63,7 +63,7 @@ jobs:
           KEYWORD="${{ github.event.inputs.keyword || 'product manager' }}"
           LOCATION="${{ github.event.inputs.location || 'usa' }}"
           echo "Keyword: $KEYWORD | Location: $LOCATION"
-          python run_scraper.py --keyword "$KEYWORD" --location "$LOCATION" --global
+          python run_scraper.py --keyword "$KEYWORD" --location "$LOCATION" --global --jobspy
 
       # 5. Auto-match against resume (skips if no GEMINI_API_KEY or resume)
       - name: Score jobs against resume
