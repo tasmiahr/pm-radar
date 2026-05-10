@@ -188,12 +188,26 @@ COMPANIES = [
     ("Spredfast",      "greenhouse", "spredfast",       2, "ok"),
     ("Drillinginfo",   "greenhouse", "drillinginfo",    2, "ok"),
     ("Keller Williams","greenhouse", "kellerwilliams",  0, "hybrid"),  # HQ Austin
+    ("Upstart",      "greenhouse", "upstart",         1, "remote"),  # AI lending, Austin office
+    ("Motive",       "greenhouse", "gomotive",         1, "remote"),  # fleet mgmt, Austin office
+    ("Bestow",       "greenhouse", "bestow",           2, "ok"),      # insurance tech, Austin
+    ("Cloudera",     "greenhouse", "cloudera",         1, "remote"),  # data platform
+    ("Blackbaud",    "greenhouse", "blackbaud",        2, "ok"),      # nonprofit software
+    ("Striveworks",  "greenhouse", "striveworks",      2, "ok"),      # AI/ML, Austin
+    ("Vrbo",         "greenhouse", "vrbo",             1, "remote"),  # Expedia subsidiary
+    ("Opcity",       "greenhouse", "opcity",           2, "ok"),      # real estate, Austin
+    ("Apptronik",    "greenhouse", "apptronik",        2, "ok"),      # robotics, Austin
+    ("Iodine",       "greenhouse", "iodinellc",        2, "ok"),      # healthcare AI, Austin
+    ("Modernizing",  "greenhouse", "modernizemedicine",2, "ok"),      # health IT
+
+    # Eightfold AI career sites
     # Format: ("Company", "eightfold", "subdomain|domain", tier, pref)
     ("American Express", "eightfold", "aexp|aexp.com",          0, "hybrid"),
-    ("Cisco",            "eightfold", "cisco|cisco.com",         0, "hybrid"),
-    ("Johnson & Johnson","eightfold", "jnj|jnj.com",            0, "hybrid"),
-    ("Walmart",          "eightfold", "walmart|walmart.com",     0, "hybrid"),
-    ("Target",           "eightfold", "target|target.com",       0, "hybrid"),
+    # Cisco redirects to careers.cisco.com which uses Workday
+    ("Cisco",            "workday",   None,                      0, "hybrid"),
+    ("Johnson & Johnson","eightfold", "jnj|jnj.com",            2, "ok"),
+    ("Walmart",          "eightfold", "walmart|walmart.com",     2, "ok"),
+    ("Target",           "eightfold", "target|target.com",       2, "ok"),
 
 ]
 

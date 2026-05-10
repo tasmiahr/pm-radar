@@ -82,13 +82,26 @@ def upsert_job(conn, job: dict) -> bool:
 
 
 def keyword_match(job: dict, keyword: str) -> bool:
-    """Return True if the keyword appears anywhere in the job's title, dept, or description."""
+    """
+    Return True if keyword matches the job.
+    Checks title first (most reliable), then department, then description.
+    If description is empty, only requires title or department match.
+    """
     kw = keyword.lower()
-    return (
-        kw in (job.get("title") or "").lower()
-        or kw in (job.get("department") or "").lower()
-        or kw in (job.get("description") or "").lower()
-    )
+    title  = (job.get("title") or "").lower()
+    dept   = (job.get("department") or "").lower()
+    desc   = (job.get("description") or "").lower()
+
+    # Always check title and department
+    if kw in title or kw in dept:
+        return True
+
+    # Only check description if it's substantive (>100 chars)
+    # This prevents false negatives when description is empty/short
+    if desc and len(desc) > 100 and kw in desc:
+        return True
+
+    return False
 
 
 # All US states — full names and abbreviations
@@ -284,12 +297,17 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
     for (name, ats, slug, tier, work_pref) in companies:
         try:
             jobs = scrape_company(name, ats, slug, tier, work_pref)
+            raw_count = len(jobs)
 
             if keyword:
                 jobs = [j for j in jobs if keyword_match(j, keyword)]
 
             if location_filter:
                 jobs = [j for j in jobs if location_match(j, location_filter)]
+
+            # Log if filtering removed everything
+            if raw_count > 0 and len(jobs) == 0:
+                print(f"  ⚠️  {name}: {raw_count} jobs fetched but 0 passed filters (keyword='{keyword}', location='{location_filter}')")
 
             new_count  = 0
             risk_tally = {}
