@@ -757,6 +757,10 @@ tbody td {
 .src-workable       { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
 .src-jazz           { background: #fdf2f8; color: #be185d; border: 1px solid #fbcfe8; }
 .src-workday        { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+.src-indeed         { background: #fff1f2; color: #e11d48; border: 1px solid #fda4af; }
+.src-google         { background: #eff4ff; color: #4285f4; border: 1px solid #bfdbfe; }
+.src-ziprecruiter   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.src-eightfold      { background: #f5f3ff; color: #7c3aed; border: 1px solid #ddd6fe; }
 
 
 .match-wrap { display: flex; align-items: center; gap: 5px; }
@@ -970,6 +974,10 @@ textarea:focus { border-color: var(--accent); }
         <button class="toggle" id="tgWK" onclick="toggleFilter('workable')" style="flex:none;padding:5px 8px">WK</button>
         <button class="toggle" id="tgJZ" onclick="toggleFilter('jazz')" style="flex:none;padding:5px 8px">Jazz</button>
         <button class="toggle" id="tgWD" onclick="toggleFilter('workday')" style="flex:none;padding:5px 8px">WD</button>
+        <button class="toggle" id="tgIN" onclick="toggleFilter('indeed')" style="flex:none;padding:5px 8px">Indeed</button>
+        <button class="toggle" id="tgGO" onclick="toggleFilter('google')" style="flex:none;padding:5px 8px">Google</button>
+        <button class="toggle" id="tgZR" onclick="toggleFilter('ziprecruiter')" style="flex:none;padding:5px 8px">Zip</button>
+        <button class="toggle" id="tgEF" onclick="toggleFilter('eightfold')" style="flex:none;padding:5px 8px">EF</button>
       </div>
     </div>
 
@@ -1013,6 +1021,22 @@ textarea:focus { border-color: var(--accent); }
         <div class="source-item">
           <span class="source-name"><span class="source-dot" style="background:#0f766e"></span>Workday</span>
           <span class="source-count" id="srcWD">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#e11d48"></span>Indeed</span>
+          <span class="source-count" id="srcIN">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#4285f4"></span>Google</span>
+          <span class="source-count" id="srcGO">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#f59e0b"></span>ZipRecruiter</span>
+          <span class="source-count" id="srcZR">--</span>
+        </div>
+        <div class="source-item">
+          <span class="source-name"><span class="source-dot" style="background:#8b5cf6"></span>Eightfold</span>
+          <span class="source-count" id="srcEF">--</span>
         </div>
       </div>
       <div style="font-size:10px;color:var(--muted2);margin-top:6px;padding:0 4px;line-height:1.5">
@@ -1283,7 +1307,7 @@ textarea:focus { border-color: var(--accent); }
 let ALL_JOBS = [];
 let sortCol = 'hours_old';
 let sortAsc = true;
-let activeFilters = { remote: false, hybrid: false, onsite: false, low: true, medium: true, high: true, greenhouse: false, lever: false, ashby: false, smartrecruiters: false, workable: false, jazz: false, workday: false };
+let activeFilters = { remote: false, hybrid: false, onsite: false, low: true, medium: true, high: true, greenhouse: false, lever: false, ashby: false, smartrecruiters: false, workable: false, jazz: false, workday: false, indeed: false, google: false, ziprecruiter: false, eightfold: false };
 let locationTags = []; // multi-location filter tags
 
 // Common location suggestions pulled from job data
@@ -1449,7 +1473,7 @@ function updateStats() {
 function updateSources() {
   const counts = {};
   ALL_JOBS.forEach(j => counts[j.source] = (counts[j.source]||0)+1);
-  const map = {greenhouse:'srcGH',lever:'srcLV',ashby:'srcAB',smartrecruiters:'srcSR',workable:'srcWK',jazz:'srcJZ',workday:'srcWD'};
+  const map = {greenhouse:'srcGH',lever:'srcLV',ashby:'srcAB',smartrecruiters:'srcSR',workable:'srcWK',jazz:'srcJZ',workday:'srcWD',indeed:'srcIN',google:'srcGO',ziprecruiter:'srcZR',eightfold:'srcEF'};
   Object.entries(map).forEach(([src, id]) => {
     document.getElementById(id).textContent = (counts[src]||0) + ' jobs';
   });
@@ -1508,9 +1532,9 @@ function toggleFilter(key) {
     const ids = {low:'tgLow',medium:'tgMed',high:'tgHigh'};
     const cls = {low:'on-green',medium:'on-yellow',high:'on-red'};
     document.getElementById(ids[key]).classList.toggle(cls[key], activeFilters[key]);
-  } else if (['greenhouse','lever','ashby','smartrecruiters','workable','jazz','workday'].includes(key)) {
+  } else if (['greenhouse','lever','ashby','smartrecruiters','workable','jazz','workday','indeed','google','ziprecruiter','eightfold'].includes(key)) {
     activeFilters[key] = !activeFilters[key];
-    const ids = {greenhouse:'tgGH',lever:'tgLV',ashby:'tgAB',smartrecruiters:'tgSR',workable:'tgWK',jazz:'tgJZ',workday:'tgWD'};
+    const ids = {greenhouse:'tgGH',lever:'tgLV',ashby:'tgAB',smartrecruiters:'tgSR',workable:'tgWK',jazz:'tgJZ',workday:'tgWD',indeed:'tgIN',google:'tgGO',ziprecruiter:'tgZR',eightfold:'tgEF'};
     document.getElementById(ids[key]).classList.toggle('on', activeFilters[key]);
   } else {
     // location type toggles handled by toggleWorkType()
@@ -1675,7 +1699,7 @@ function applyFilters() {
     maxHours = durVal * mult[durUnit];
   }
 
-  const srcActive = activeFilters.greenhouse || activeFilters.lever || activeFilters.ashby || activeFilters.smartrecruiters || activeFilters.workable || activeFilters.jazz || activeFilters.workday;
+  const srcActive = activeFilters.greenhouse || activeFilters.lever || activeFilters.ashby || activeFilters.smartrecruiters || activeFilters.workable || activeFilters.jazz || activeFilters.workday || activeFilters.indeed || activeFilters.google || activeFilters.ziprecruiter || activeFilters.eightfold;
   const wrkActive = activeFilters.remote || activeFilters.hybrid || activeFilters.onsite;
   // work type is now exclusive (only one active at a time)
 
@@ -1787,7 +1811,7 @@ function legitHTML(j) {
 }
 
 function srcHTML(s) {
-  const labels = {greenhouse:'GH', lever:'Lever', ashby:'Ashby', smartrecruiters:'SmartR', workable:'WK', jazz:'Jazz', workday:'WD'};
+  const labels = {greenhouse:'GH', lever:'Lever', ashby:'Ashby', smartrecruiters:'SmartR', workable:'WK', jazz:'Jazz', workday:'WD', indeed:'Indeed', google:'Google', ziprecruiter:'Zip',eightfold:'EF'};
   const cls = `src-${s}`;
   return `<span class="src-badge ${cls}">${labels[s]||s}</span>`;
 }

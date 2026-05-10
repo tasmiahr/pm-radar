@@ -71,18 +71,137 @@ COMPANIES = [
     # EXTRA -- SmartRecruiters / Workable / Ashby
     # ============================================================
     ("Smartsheet",   "smartrecruiters", "smartsheet",   1, "remote"),
-    ("Twilio",       "ashby",           "twilio",       1, "remote"),  # Twilio -> Ashby
-    ("Brex",         "ashby",           "brex",         1, "remote"),  # Brex -> Ashby
-    ("Deel",         "ashby",           "deel",         1, "remote"),  # Deel -> Ashby
-    ("Rippling",     "ashby",           "rippling",     1, "remote"),  # Rippling -> Ashby
+    ("Twilio",       "ashby",           "twilio",       1, "remote"),
+    ("Brex",         "ashby",           "brex",         1, "remote"),
+    ("Deel",         "ashby",           "deel",         1, "remote"),
+    ("Rippling",     "ashby",           "rippling",     1, "remote"),
     ("Nvidia",       "workday",         None,           0, "hybrid"),
+
+    # ============================================================
+    # EXPANDED WATCHLIST -- fintech, SaaS, crypto, data
+    # job-boards.greenhouse.io companies use same API token
+    # ============================================================
+
+    # Fintech / payments
+    ("Robinhood",    "greenhouse", "robinhood",         1, "remote"),
+    ("Plaid",        "greenhouse", "plaid",             1, "remote"),
+    ("Chime",        "greenhouse", "chime",             1, "remote"),
+    ("Ramp",         "ashby",      "ramp",              1, "remote"),
+    ("Mercury",      "ashby",      "mercury",           1, "remote"),
+    ("Braintree",    "greenhouse", "braintree",         1, "remote"),
+    ("Checkout.com", "greenhouse", "checkout",          1, "remote"),
+    ("Klarna",       "greenhouse", "klarna",            1, "remote"),
+    ("Betterment",   "greenhouse", "betterment",        1, "remote"),
+    ("Acorns",       "greenhouse", "acorns",            1, "remote"),
+    ("Stash",        "greenhouse", "stash",             1, "remote"),
+
+    # Crypto
+    ("Gemini",       "greenhouse", "gemini",            1, "remote"),
+    ("Kraken",       "greenhouse", "kraken",            1, "remote"),
+    ("Chainalysis",  "greenhouse", "chainalysis",       1, "remote"),
+    ("Circle",       "greenhouse", "circle",            1, "remote"),
+    ("Paxos",        "greenhouse", "paxos",             1, "remote"),
+
+    # SaaS / productivity
+    ("Airtable",     "greenhouse", "airtable",          1, "remote"),
+    ("Asana",        "greenhouse", "asana",             1, "remote"),
+    ("Webflow",      "greenhouse", "webflow",           1, "remote"),
+    ("Retool",       "greenhouse", "retool",            1, "remote"),
+    ("Linear",       "ashby",      "linear",            1, "remote"),
+    ("Vercel",       "ashby",      "vercel",            1, "remote"),
+    ("Loom",         "greenhouse", "loom",              1, "remote"),
+    ("Airtable",     "greenhouse", "airtable",          1, "remote"),
+    ("Productboard", "greenhouse", "productboard",      1, "remote"),
+    ("Typeform",     "greenhouse", "typeform",          1, "remote"),
+
+    # Analytics / data
+    ("Amplitude",    "greenhouse", "amplitude",         1, "remote"),
+    ("Mixpanel",     "greenhouse", "mixpanel",          1, "remote"),
+    ("Databricks",   "greenhouse", "databricks",        1, "remote"),
+    ("Snowflake",    "greenhouse", "snowflake",         1, "remote"),
+    ("Confluent",    "greenhouse", "confluent",         1, "remote"),
+    ("dbt Labs",     "greenhouse", "dbtlabs",           1, "remote"),
+    ("Heap",         "greenhouse", "heap",              1, "remote"),
+    ("FullStory",    "greenhouse", "fullstory",         1, "remote"),
+
+    # CRM / sales
+    ("Gong",         "greenhouse", "gong",              1, "remote"),
+    ("Outreach",     "greenhouse", "outreach",          1, "remote"),
+    ("Salesloft",    "greenhouse", "salesloft",         1, "remote"),
+    ("Intercom",     "greenhouse", "intercom",          1, "remote"),
+
+    # HR / people
+    ("Gusto",        "greenhouse", "gusto",             1, "remote"),
+    ("Lattice",      "greenhouse", "lattice",           1, "remote"),
+    ("Carta",        "greenhouse", "carta",             1, "remote"),
+
+    # Security / infra
+    ("Okta",         "greenhouse", "okta",              1, "remote"),
+    ("Checkr",       "greenhouse", "checkr",            1, "remote"),
+    ("Cloudflare",   "greenhouse", "cloudflare",        0, "hybrid"),
+
+    # Gaming / media
+    ("Zynga",        "greenhouse", "zyngacareers",      2, "ok"),
+    ("NBCUniversal", "smartrecruiters", "NBCUniversal", 2, "ok"),
+
+    # Travel
+    ("Navan",        "greenhouse", "navan",             1, "remote"),
+
+    # ============================================================
+    # AUSTIN, TX COMPANIES
+    # Silicon Hills -- major tech hub
+    # ============================================================
+
+    # Large Austin employers (Workday/custom ATS)
+    ("Dell",           "workday",    None,              0, "hybrid"),  # Dell HQ Austin
+    ("Oracle",         "workday",    None,              0, "hybrid"),  # Oracle HQ Austin
+    ("Tesla",          "workday",    None,              0, "hybrid"),  # major Austin employer
+    ("Indeed",         "greenhouse", "indeed",          0, "hybrid"),  # Indeed HQ Austin
+    ("HomeAway/VRBO",  "greenhouse", "homeaway",        0, "hybrid"),  # Expedia subsidiary Austin
+
+    # Austin fintech
+    ("Q2",             "greenhouse", "q2ebanking",      1, "remote"),  # fintech Austin
+    ("Opcity",         "greenhouse", "opcity",          2, "ok"),
+    ("WP Engine",      "greenhouse", "wpengine",        1, "remote"),
+    ("Kforce",         "greenhouse", "kforce",          2, "ok"),
+    ("Vrbo",           "greenhouse", "vrbo",            1, "remote"),
+    ("Bumble",         "lever",      "bumbleinc",       0, "hybrid"),  # Bumble HQ Austin
+    ("Match Group",    "greenhouse", "matchgroup",      0, "hybrid"),  # Match HQ Dallas/Austin
+    ("BigCommerce",    "greenhouse", "bigcommerce",     1, "remote"),
+    ("Opcity",         "greenhouse", "opcity",          2, "ok"),
+    ("Civitas",        "greenhouse", "civitaslearning",  2, "ok"),
+    ("Atmosphere",     "greenhouse", "atmosphere",      2, "ok"),
+    ("Sana Benefits",  "ashby",      "sanabenefits",    1, "remote"),
+    ("Ojo Labs",       "greenhouse", "ojolabs",         2, "ok"),
+    ("Liveoak Tech",   "greenhouse", "liveoaktech",     2, "ok"),
+    ("NinjaRMM",       "greenhouse", "ninjarmm",        1, "remote"),
+    ("Shipstation",    "greenhouse", "shipstation",     1, "remote"),
+    ("Bazaarvoice",    "greenhouse", "bazaarvoice",     2, "ok"),
+    ("Dosh",           "greenhouse", "dosh",            2, "ok"),
+    ("Khoros",         "greenhouse", "khoros",          2, "ok"),
+    ("Phunware",       "greenhouse", "phunware",        2, "ok"),
+    ("Yodle",          "greenhouse", "yodle",           2, "ok"),
+    ("CrowdStrike",    "greenhouse", "crowdstrike",     1, "remote"),  # HQ Austin
+    ("Procore",        "greenhouse", "procore",         1, "remote"),  # Austin office
+    ("SailPoint",      "greenhouse", "sailpoint",       1, "remote"),  # HQ Austin
+    ("Hyperion",       "greenhouse", "hyperion",        2, "ok"),
+    ("Spredfast",      "greenhouse", "spredfast",       2, "ok"),
+    ("Drillinginfo",   "greenhouse", "drillinginfo",    2, "ok"),
+    ("Keller Williams","greenhouse", "kellerwilliams",  0, "hybrid"),  # HQ Austin
+    # Format: ("Company", "eightfold", "subdomain|domain", tier, pref)
+    ("American Express", "eightfold", "aexp|aexp.com",          0, "hybrid"),
+    ("Cisco",            "eightfold", "cisco|cisco.com",         0, "hybrid"),
+    ("Johnson & Johnson","eightfold", "jnj|jnj.com",            0, "hybrid"),
+    ("Walmart",          "eightfold", "walmart|walmart.com",     0, "hybrid"),
+    ("Target",           "eightfold", "target|target.com",       0, "hybrid"),
 
 ]
 
 # Auto-split used by run_scraper.py
 SCRAPEABLE = [
     c for c in COMPANIES
-    if c[1] in ("greenhouse", "lever", "ashby", "smartrecruiters", "workable", "jazz")
+    if c[1] in ("greenhouse", "lever", "ashby", "smartrecruiters",
+                "workable", "jazz", "eightfold")
     and c[2] is not None
     or c[1] == "workday"
 ]
