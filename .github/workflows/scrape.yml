@@ -63,7 +63,7 @@ jobs:
           KEYWORD="${{ github.event.inputs.keyword || 'product manager' }}"
           LOCATION="${{ github.event.inputs.location || 'usa' }}"
           echo "Keyword: $KEYWORD | Location: $LOCATION"
-          python run_scraper.py --keyword "$KEYWORD" --location "$LOCATION" --global --jobspy
+          python run_scraper.py --keyword "$KEYWORD" --location "$LOCATION" --global --jobspy --builtin
 
       # 5. Auto-match against resume (skips if no GEMINI_API_KEY or resume)
       - name: Score jobs against resume
