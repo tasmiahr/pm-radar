@@ -15,6 +15,7 @@ from companies import SCRAPEABLE, WORKDAY, CUSTOM_SKIP
 from scrapers.ats import scrape_company
 from scrapers.global_search import search_all_platforms
 from scrapers.jobspy_search import run_jobspy
+from scrapers.builtin_search import scrape_builtin
 from db import get_conn, init_db
 
 
@@ -268,7 +269,7 @@ def location_match(job: dict, location_filter: str) -> bool:
 # -----------------------------------------------------------------
 
 def run(keyword: str = None, tier_filter: int = None, global_search: bool = False,
-        location_filter: str = None, use_jobspy: bool = False):
+        location_filter: str = None, use_jobspy: bool = False, use_builtin: bool = False):
     init_db()
     conn = get_conn()
 
@@ -404,6 +405,32 @@ def run(keyword: str = None, tier_filter: int = None, global_search: bool = Fals
             print(f"  ❌ JobSpy error: {e}")
     elif use_jobspy and not keyword:
         print("\n  ⚠️  --jobspy requires --keyword")
+
+    # ── BUILT IN AUSTIN SCRAPE ───────────────────────────────────────
+    if use_builtin:
+        print(f"\n  🏙️  Built In Austin — product manager listings...")
+        print(f"  {'-'*60}")
+        try:
+            builtin_jobs = scrape_builtin(
+                category="product",
+                city_slug="austin",
+                max_pages=10,
+            )
+            if location_filter:
+                builtin_jobs = [j for j in builtin_jobs if location_match(j, location_filter)]
+
+            builtin_new = 0
+            for job in builtin_jobs:
+                is_new = upsert_job(conn, job)
+                if is_new:
+                    builtin_new += 1
+            conn.commit()
+            total_found += len(builtin_jobs)
+            total_new   += builtin_new
+            print(f"  🏙️  Built In Austin: {len(builtin_jobs)} jobs, {builtin_new} new")
+        except Exception as e:
+            errors.append(f"Built In: {e}")
+            print(f"  ❌ Built In error: {e}")
         print("      Example: python run_scraper.py --global -k 'product manager'")
 
     elapsed = time.time() - start
@@ -461,7 +488,13 @@ if __name__ == "__main__":
         action="store_true",
         help="Also search Indeed, Google Jobs, ZipRecruiter via JobSpy (requires --keyword)"
     )
+    parser.add_argument(
+        "--builtin", "-b",
+        dest="use_builtin",
+        action="store_true",
+        help="Also scrape Built In Austin product manager listings (HTML scraper)"
+    )
     args = parser.parse_args()
     run(keyword=args.keyword, tier_filter=args.tier,
         global_search=args.global_search, location_filter=args.location,
-        use_jobspy=args.use_jobspy)
+        use_jobspy=args.use_jobspy, use_builtin=args.use_builtin)
